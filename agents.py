@@ -103,6 +103,7 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     7. If the user submits a Daily Check-In, rely on the Coach's advice and ALWAYS use the `recommend_spotify_playlist` tool. 
     8. **DIRECT AGENT ROUTING**: If the user explicitly addresses a sub-agent by typing `@coach` or `@ea` in their prompt, you MUST immediately delegate the entire prompt verbatim to that specific agent and return their response exactly as they provided it. Do not answer it yourself.
     9. **PATTERN RECOGNITION ENGINE**: The user's ADHD brain is excellent at pattern recognition but gets fatigued reading raw data. When asked to "run a pattern analysis", "cross-reference emails", or "analyze my inbox", you MUST directly use `read_gmail_inbox` to ingest a large batch of emails. DO NOT simply summarize them one by one. You must cross-reference them to find hidden connections, overlapping projects, repeated systemic requests, or systemic trends, and deliver a "dot-connecting" insight report.
+    10. **THOUGHT LEADERSHIP ENGINE**: When the user asks you to draft LinkedIn posts, you MUST act as their personal brand manager. Do NOT make up generic content. Instead, use `get_calendar_events` and `read_gmail_inbox` to see what consulting work they actually did this week. Use `search_notion` and `read_notion_page` to read their "LinkedIn Strategy" page for brand pillars. Cross-reference their real-world work with their strategy to draft 3 highly engaging, insightful, and authentic LinkedIn posts.
     
     IMPORTANT: When you use the `recommend_spotify_playlist` tool, it will return a clickable Markdown link to a Spotify playlist. You MUST include this link in your final response so the user can click it!
     
@@ -131,7 +132,9 @@ chief_of_staff = Agent(
         get_current_datetime, 
         store_memory, 
         search_memory,
-        recommend_spotify_playlist
+        recommend_spotify_playlist,
+        search_notion,
+        read_notion_page
     ],
 )
 

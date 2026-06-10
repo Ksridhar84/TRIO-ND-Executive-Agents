@@ -63,6 +63,7 @@ Here is a complete list of the tools the agents can use to execute tasks for you
 ## 🆕 Features Added During Hackathon
 *   **Notion Integration**: "Second Brain" project wikis and the "Household Quests" shared partner-task page.
 *   **Spotify Wellness**: Real-time iframe embedding of Lofi/Brown Noise playlists based on the user's energy check-in.
+*   **LinkedIn Thought Leadership Engine**: Cross-references the user's Gmail and Calendar to autonomously generate hyper-relevant LinkedIn posts based on their actual consulting work this week.
 *   **Voice & Multimodal Inputs**: Audio memo recordings and image uploads directly passed to Gemini.
 *   **Chat Archiving**: File-based long-term memory to save, retrieve, and scroll through past chat sessions.
 *   **Background Autonomous Schedulers**: Python scripts that run independently to deliver morning briefings.
