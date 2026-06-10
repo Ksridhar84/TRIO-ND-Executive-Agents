@@ -95,7 +95,7 @@ def job_hourly_inbox_check():
     for em in new_emails:
         prompt += f"- From: {em['sender']}\\n  Subject: {em['subject']}\\n  Snippet: {em['snippet']}\\n\\n"
         
-    prompt += "Analyze these emails. If one of them is from ME (the user), treat it as a direct command and execute any instructions I gave you. Otherwise, if there is anything urgent or important from someone else, please send me an email summarizing it to keep me informed. If it's just spam or trivial, you can ignore it."
+    prompt += "Activate your Pattern Recognition Engine. Analyze these new emails alongside your memory of past emails. Do not just summarize them one-by-one. Connect the dots: Are there any emerging patterns, duplicate requests, overlapping projects, or systemic trends the user should know about? If you find a useful connection or urgent systemic issue, send me an email with your dot-connecting insights."
     
     asyncio.run(run_automated_report(prompt))
 

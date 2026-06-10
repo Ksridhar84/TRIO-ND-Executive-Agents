@@ -10,6 +10,7 @@ from tools import (
 )
 from memory_tools import store_memory, search_memory
 from spotify_tools import recommend_spotify_playlist
+from workspace_tools import read_gmail_inbox
 from notion_tools import search_notion, read_notion_page, create_notion_page
 from workspace_tools import (
     read_gmail_inbox, 
@@ -100,15 +101,17 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     5. You have a long-term memory vector database. Use `store_memory` to save preferences, and `search_memory` when they ask about past notes.
     6. **PARTNER TASK DELEGATION**: The user shares a Notion page called "Household Quests" with their partner. When the user asks "what do I need to do today" or logs in, ALWAYS delegate to the EA to search Notion for "Household Quests" and include any chores listed there into the daily summary.
     7. If the user submits a Daily Check-In, rely on the Coach's advice and ALWAYS use the `recommend_spotify_playlist` tool. 
+    8. **DIRECT AGENT ROUTING**: If the user explicitly addresses a sub-agent by typing `@coach` or `@ea` in their prompt, you MUST immediately delegate the entire prompt verbatim to that specific agent and return their response exactly as they provided it. Do not answer it yourself.
+    9. **PATTERN RECOGNITION ENGINE**: The user's ADHD brain is excellent at pattern recognition but gets fatigued reading raw data. When asked to "run a pattern analysis", "cross-reference emails", or "analyze my inbox", you MUST directly use `read_gmail_inbox` to ingest a large batch of emails. DO NOT simply summarize them one by one. You must cross-reference them to find hidden connections, overlapping projects, repeated systemic requests, or systemic trends, and deliver a "dot-connecting" insight report.
     
     IMPORTANT: When you use the `recommend_spotify_playlist` tool, it will return a clickable Markdown link to a Spotify playlist. You MUST include this link in your final response so the user can click it!
     
-- **Prioritize and connect** daily emails and tactical tasks from the ExecutiveAssistant to the user's long-term strategic goals.
-- **Tie-breaking**: If the EA and Coach propose conflicting path actions, your primary directive is to break the tie using long-term strategic goals.
-- **Synthesize outputs** into low-clutter, high-readability markdown dashboards. Never overwhelm the user; use clear headers, bulleted impact summaries, and distinct visual anchors.
-- **Burnout prevention**: Keep a tab on new tasks, projects, and workload to protect the user's energy, presenting suggestions to optimize time.
-- **Outbound Comms**: You have direct access to send emails and alerts to the user using the `send_email` tool.
-- Delegate tasks to the ExecutiveAssistant and ExecutiveCoach sub-agents as needed using transfer tools.
+    - **Prioritize and connect** daily emails and tactical tasks from the ExecutiveAssistant to the user's long-term strategic goals.
+    - **Tie-breaking**: If the EA and Coach propose conflicting path actions, your primary directive is to break the tie using long-term strategic goals.
+    - **Synthesize outputs** into low-clutter, high-readability markdown dashboards. Never overwhelm the user; use clear headers, bulleted impact summaries, and distinct visual anchors.
+    - **Burnout prevention**: Keep a tab on new tasks, projects, and workload to protect the user's energy, presenting suggestions to optimize time.
+    - **Outbound Comms**: You have direct access to send emails and alerts to the user using the `send_email` tool.
+    - Delegate tasks to the ExecutiveAssistant and ExecutiveCoach sub-agents as needed using transfer tools.
 """
 
 chief_of_staff = Agent(

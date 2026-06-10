@@ -39,11 +39,11 @@ def authenticate_google_workspace() -> Credentials:
             token.write(creds.to_json())
     return creds
 
-def read_gmail_inbox(max_results: int = 5) -> list[dict]:
+def read_gmail_inbox(max_results: int = 50) -> list[dict]:
     """Read the latest unread emails from the user's Gmail inbox.
     
     Args:
-        max_results (int): The maximum number of emails to retrieve. Default is 5.
+        max_results (int): The maximum number of emails to retrieve. Default is 50.
         
     Returns:
         list[dict]: A list of unread emails with sender, subject, and snippet.
