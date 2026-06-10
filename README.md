@@ -1,123 +1,89 @@
-# 🧠 ND TRIO Executive OS
-**Google Cloud Rapid Agent Hackathon Submission**
+# ND TRIO Executive OS
 
-An autonomous, multi-agent "Executive Command Center" designed specifically for Neurodivergent (ND) professionals. The system acts as a judgment-free, deeply integrated support network to manage tasks, code, schedule, and cognitive wellness through coordinated AI sub-agents.
+## Overview
 
-## 🎯 The Vision
-Neurodivergent individuals (ADHD, Autism, Dyslexia) often struggle with Executive Dysfunction—the inability to initiate tasks, manage time, or regulate focus. Traditional productivity apps rely on the user to manually organize data, which causes cognitive overload.
+The ND TRIO Executive OS is a team of specialized AI agents designed as a "Cognitive Command Center" for neurodivergent (ADHD, Autism, Dyslexia) professionals. It assists users by providing deep workspace integration, pattern recognition, and wellness monitoring to combat executive dysfunction and burnout.
 
-**ND TRIO** flips the paradigm. Instead of *you* managing the app, the **Agents manage your life**, breaking down complex tasks, monitoring your energy levels, and autonomously executing actions across your digital workspace.
+1. **Chief of Staff (CoS) Agent**: The orchestrator and primary communicator. This agent translates raw data into low-clutter, highly scannable Markdown. It possesses a "Pattern Recognition Engine" to cross-reference flooded email inboxes and calendar events, finding hidden connections and systemic trends. It delegates specialized tasks to sub-agents and uses long-term vector memory to learn user quirks.
+2. **Executive Assistant (EA) Agent**: This agent is responsible for tactical operations and deep-work management. It connects to Google Workspace (Gmail, Calendar, Docs) and Notion to draft emails, read schedules, manage project wikis, and handle "Partner Delegated Tasks" (e.g., household chores added to a shared Notion page by a spouse). It also integrates with GitLab via MCP for code tracking.
+3. **Executive Coach Agent**: This agent's role is to monitor emotional and cognitive wellness. It steps in during "Daily Check-Ins" to assess burnout, energy, and focus levels. It provides neuro-inclusive interventions, explicitly breaking ties between the other agents, and embeds live Lofi or Brown Noise Spotify playlists into the dashboard based on the user's real-time sensory needs.
 
----
+### 🏆 Hackathon Judging Criteria Alignment
 
-## 🏗️ System Architecture & Multi-Agent Design
+*   **Technological Implementation**: Built on the **Google Agent Development Kit (ADK)** and Gemini, the system demonstrates extremely robust integration. It utilizes Google Workspace OAuth 2.0 (Gmail, Calendar, Docs), the Model Context Protocol (MCP) for secure GitLab access, the Notion API for "Second Brain" storage, and `sqlite-vec` for local vector memory. It also features autonomous Python background schedulers (`scheduler.py`) that run independently of the frontend.
+*   **Design (UX/UI)**: The frontend is built in Streamlit using a custom "Glassmorphism" CSS theme. It is intentionally designed as a low-sensory, pastel-gradient UI to reduce cognitive load and sensory fatigue for neurodivergent users. It includes multi-modal inputs (voice memos, handwritten image uploads) so users don't have to type.
+*   **Potential Impact**: Massive. Traditional productivity apps rely on the user to manually organize data, causing cognitive overload for those with ADHD. This system flips the paradigm: the agents autonomously manage the user's life (e.g., zero-data-entry LinkedIn Thought Leadership generation, partner body-doubling via Notion), directly addressing the core deficits of Executive Dysfunction.
+*   **Quality of the Idea**: Highly creative. Instead of a generic coding assistant, this is a holistic *human support* network. Blending software engineering (GitLab) with cognitive wellness (Spotify sensory regulation) and household management (Notion partner integration) into a single, cohesive ADK agent topology is a deeply unique approach to AI assistants.
 
-The system is built on the **Google ADK (Agent Development Kit)** and utilizes a hierarchical agent topology:
+## Agent Details
 
-1. **The Chief of Staff (CoS)** *[The Orchestrator]*
-   - **Role**: The only agent that speaks directly to the user.
-   - **Capabilities**: Translates raw data into low-clutter, highly scannable Markdown. Possesses long-term memory to learn the user's quirks and preferences. Delegates specialized tasks to sub-agents.
-   
-2. **The Executive Assistant (EA)** *[The Executor]*
-   - **Role**: Tactical operations and deep-work management.
-   - **Capabilities**: Connects to external APIs to draft emails, read calendars, manage Notion project wikis, and interact with GitLab repositories.
+The key features of the ND TRIO Executive OS include:
 
-3. **The Executive Coach** *[The Regulator]*
-   - **Role**: Emotional and cognitive wellness monitor.
-   - **Capabilities**: Steps in during "Daily Check-Ins" to assess burnout, energy, and focus levels. Provides neuro-inclusive interventions (e.g., body-doubling, forced breaks, Lofi music).
+| Feature | Description |
+| --- | --- |
+| **Interaction Type** | Conversational & Multi-Modal (Voice/Image) |
+| **Complexity**  | High |
+| **Agent Type**  | Multi-Agent (Hierarchical) |
+| **Components**  | Tools: Google Workspace, GitLab MCP, Notion, Spotify, SQLite Vector Memory |
+| **Vertical**  | Productivity & Neuro-Inclusive Accessibility |
 
----
+## Setup and Installation
 
-## 🔌 API Connections & Integrations
+1.  **Prerequisites**
+    *   Python 3.10+
+    *   Google Cloud Project (OAuth 2.0 Client ID credentials)
+    *   GitLab Access Token
+    *   Notion API Integration Token
 
-The agents are granted real-world agency through a massive suite of secure API integrations:
+2.  **Installation**
+    ```bash
+    # Clone this repository.
+    git clone https://github.com/Ksridhar84/TRIO-ND-Executive-Agents.git
+    cd TRIO-ND-Executive-Agents
+    
+    # Install dependencies
+    pip install -r requirements.txt
+    ```
 
-*   **Google Workspace API (OAuth 2.0)**
-    *   **Gmail**: Reads inbox, flags urgent items, and sends outbound emails.
-    *   **Calendar**: Reads upcoming events and schedules new blocks.
-    *   **Docs/Slides**: Extracts text and context from Google Drive.
-*   **GitLab API (via Model Context Protocol - MCP)**
-    *   Securely accesses the user's repositories, reads code, and tracks issues.
-*   **Notion API**
-    *   Acts as the system's "Second Brain". The EA can search, read, and write project documentation, meeting notes, and handle "Partner Delegated Tasks" (e.g., household chores).
-*   **Spotify Integration**
-    *   Dynamically recommends and embeds curated playlists (Lofi, Brown Noise, High Energy) into the dashboard based on the user's real-time cognitive energy levels.
-*   **Local SQLite Vector Database**
-    *   Provides persistent, long-term memory (`sqlite-vec`) across chat sessions.
+3.  **Configuration**
+    *   Create a `.env` file based on `.env.example`:
+        ```bash
+        GEMINI_API_KEY=<your-gemini-key>
+        GITLAB_TOKEN=<your-gitlab-token>
+        GITLAB_PROJECT_ID=<your-project-id>
+        NOTION_API_TOKEN=<your-notion-token>
+        ```
+    *   Place your Google `credentials.json` in the root directory. Upon first run, you will be prompted to authenticate via your browser to generate a `token.json`.
 
----
+## Running the Agent
 
-## 🧰 Tools & Agent Capabilities
-Here is a complete list of the tools the agents can use to execute tasks for you:
+You can run the interactive Streamlit dashboard locally:
 
-*   **Communication Tools:** `send_email`, `read_gmail_inbox`
-*   **Scheduling Tools:** `get_calendar_events`, `create_calendar_event`, `get_current_datetime`
-*   **Knowledge & Docs:** `read_google_doc`, `read_google_sheet`, `read_google_slide`, `create_google_doc`, `search_notion`, `read_notion_page`, `create_notion_page`
-*   **Software Engineering:** `read_gitlab_issue`, `create_issue`, `list_commits` (via MCP)
-*   **Cognitive Support:** `recommend_spotify_playlist`, `get_wellness_break_recommendation`, `get_cheery_inspiration`, `analyze_decision_matrix`
-*   **Cognitive Offloading:** `breakdown_complex_task`
-*   **Persistent Memory:** `store_memory`, `search_memory`
+```bash
+streamlit run dashboard.py
+```
 
----
+This will start a local web server and open the Glassmorphism UI in your browser. From the sidebar, you can:
+*   Submit a "Daily Coach Check-In" to trigger wellness protocols.
+*   Upload Voice Memos or Images.
+*   Manage persistent Chat History sessions.
 
-## 🆕 Features Added During Hackathon
-*   **Notion Integration**: "Second Brain" project wikis and the "Household Quests" shared partner-task page.
-*   **Spotify Wellness**: Real-time iframe embedding of Lofi/Brown Noise playlists based on the user's energy check-in.
-*   **LinkedIn Thought Leadership Engine**: Cross-references the user's Gmail and Calendar to autonomously generate hyper-relevant LinkedIn posts based on their actual consulting work this week.
-*   **Voice & Multimodal Inputs**: Audio memo recordings and image uploads directly passed to Gemini.
-*   **Chat Archiving**: File-based long-term memory to save, retrieve, and scroll through past chat sessions.
-*   **Background Autonomous Schedulers**: Python scripts that run independently to deliver morning briefings.
-*   **Glassmorphism UI**: A sleek, ADHD-friendly, low-sensory frontend dashboard.
+Alternatively, the background scheduler runs automatically to deliver Morning Briefings and perform hourly Pattern Recognition scans on your inbox.
 
----
+### Example Interaction
 
-## ✨ Core Workflows & Functionalities
+Below is an example interaction demonstrating the system's pattern recognition and integration capabilities:
 
-### 1. The "Daily Check-In" Energy Workflow
-Users submit their current "Energy" and "Focus" levels (1-10) via the sidebar. The **Coach** evaluates the scores (e.g., identifying "Emergency Low Power Mode") and the **Chief of Staff** embeds an auto-playing Spotify widget into the dashboard with a tailored soundscape (e.g., Brown Noise for focus, Lofi for sensory regulation).
+```
+User: CoS, please draft my LinkedIn posts for this week. Look at my recent calendar events and emails to see what consulting work I've actually been doing, and cross-reference that with the brand pillars listed in my 'LinkedIn Strategy' Notion page to write 3 engaging posts.
 
-### 2. Multi-Modal Hub
-Users don't have to type. They can record **Voice Memos** or upload **Handwritten Notes/Images**. The system processes the audio/images using Gemini multimodal capabilities and feeds the exact text/intent to the agents.
+Chief of Staff: I am pulling your data now. I see from your calendar that you had three meetings this week regarding Google Cloud Architecture, and your emails show you successfully resolved a major data migration bottleneck for a client. 
 
-### 3. The "Partner Hotline" (Body Doubling)
-To support ADHD household management, the user's partner has access to a shared Notion page called "Household Quests." When the user asks the dashboard "What do I need to do today?", the EA silently scrapes that Notion page and integrates the partner's requested chores into the executive summary.
+I've also retrieved your "LinkedIn Strategy" from Notion, noting your focus on "Demystifying AI for Enterprise." 
 
-### 4. Background Morning Briefings
-A dedicated `scheduler.py` background process runs on the host machine. Every morning at 8:30 AM, it autonomously wakes up the EA, scans the user's unread emails and daily calendar, generates a prioritized "Morning Briefing," and emails it directly to the user before they even open the dashboard.
+Here are three drafted posts based on your real-world work:
 
-### 5. Chat History Archiving
-The Streamlit dashboard includes a persistent file-system memory. Users can instantly clear the screen for a new session or load previous chat logs from the sidebar dropdown, eliminating the anxiety of losing context.
-
----
-
-## 🛠️ Tech Stack
-*   **LLM Framework**: Google ADK (Agent Development Kit), Google Gemini API
-*   **Frontend**: Streamlit (with custom Glassmorphism CSS & persistent Session State)
-*   **Tooling Protocols**: MCP (Model Context Protocol) for GitLab
-*   **Memory**: SQLite with Vector Extensions (`sqlite-vec`)
-*   **Integrations**: Notion Client, Google API Python Client
-
----
-
-## 🚀 Setup & Installation
-
-1. **Clone & Install**
-   ```bash
-   git clone https://github.com/Ksridhar84/TRIO-ND-Executive-Agents.git
-   cd TRIO-ND-Executive-Agents
-   pip install -r requirements.txt
-   ```
-2. **Environment Variables**
-   Create a `.env` file:
-   ```env
-   GEMINI_API_KEY=your_key
-   GITLAB_TOKEN=your_token
-   GITLAB_PROJECT_ID=your_id
-   NOTION_API_TOKEN=your_token
-   ```
-3. **Google Auth**
-   Place your `credentials.json` in the root folder.
-4. **Run the Dashboard**
-   ```bash
-   streamlit run dashboard.py
-   ```
+[Post 1: Focuses on the hidden complexities of cloud data migration, tying it back to your recent client success...]
+[Post 2: A thought leadership piece on enterprise AI adoption, pulling directly from your brand pillars...]
+[Post 3: A breakdown of a technical hurdle you solved this week, framed as actionable advice for other engineers...]
+```
