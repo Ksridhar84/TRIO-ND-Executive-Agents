@@ -5,11 +5,14 @@ import os
 import datetime
 import base64
 from dotenv import load_dotenv
+import re
 from google.adk.runners import InMemoryRunner
+import uuid
 from google.genai import types
 from agents import chief_of_staff
 from voice_tools import generate_agent_voice
 from streamlit_mic_recorder import mic_recorder
+from chat_tools import save_chat_history, load_chat_history, list_chat_histories
 
 # Setup API Key for Streamlit
 load_dotenv()
@@ -160,9 +163,11 @@ def load_image_b64(path):
 
 avatar_b64 = load_image_b64("assets/cos_avatar.png")
 
-# --- Initialize Session State for Audio ---
+# --- Initialize Session State for Audio & Session ID ---
 if "voice_bytes" not in st.session_state:
     st.session_state.voice_bytes = None
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
 
 # --- Sidebar: Multi-Modal Hub & Avatar ---
 with st.sidebar:
@@ -188,6 +193,37 @@ with st.sidebar:
     if voice_memo and "bytes" in voice_memo:
         st.session_state.voice_bytes = voice_memo["bytes"]
         st.success("✅ Audio recorded! Type a message below and hit Enter to send it.")
+        
+    st.markdown("---")
+    st.header("🧘 Daily Coach Check-In")
+    st.markdown("How are we feeling right now?")
+    energy_level = st.slider("Energy Level", min_value=1, max_value=10, value=5)
+    focus_level = st.slider("Focus/Cognitive Clarity", min_value=1, max_value=10, value=5)
+    
+    if st.button("Submit to Coach"):
+        check_in_msg = f"Daily Check-In: My Energy Level is {energy_level}/10 and my Focus Level is {focus_level}/10. Coach, please assess my state and CoS, please recommend a Spotify playlist to match or fix this state."
+        st.session_state.pending_checkin = check_in_msg
+        st.success("Submitted! The Chief of Staff is reviewing your state...")
+
+    st.markdown("---")
+    st.header("🗄️ Conversation History")
+    
+    if st.button("➕ Start New Conversation", use_container_width=True):
+        st.session_state.session_id = str(uuid.uuid4())
+        st.session_state.messages = [
+            {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?"}
+        ]
+        st.rerun()
+        
+    histories = list_chat_histories()
+    if histories:
+        chat_dict = {h[1]: h[0] for h in histories}
+        selected_display = st.selectbox("Load Previous:", ["-- Select --"] + list(chat_dict.keys()), label_visibility="collapsed")
+        if st.button("📂 Load Chat", use_container_width=True):
+            if selected_display != "-- Select --":
+                st.session_state.session_id = chat_dict[selected_display]
+                st.session_state.messages = load_chat_history(chat_dict[selected_display])
+                st.rerun()
 
 # --- Initialize Conversation Session History ---
 if "messages" not in st.session_state:
@@ -197,15 +233,35 @@ if "messages" not in st.session_state:
 
 # --- Render the Persistent Chat History ---
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=msg["avatar"]):
-        st.write(msg["content"])
-        if msg.get("has_file"):
-            st.caption("*(📎 Included an attachment)*")
-        if msg.get("audio_bytes"):
-            st.audio(msg["audio_bytes"], format="audio/mp3")
+            st.write(msg["content"])
+            
+            # Check for standard Spotify URLs
+            content = msg["content"]
+            spotify_pattern = r'(https://open\.spotify\.com/playlist/[a-zA-Z0-9]+)'
+            spotify_matches = [url.strip() for url in re.findall(spotify_pattern, content)]
+            
+            for url in spotify_matches:
+                embed_url = url.replace("/playlist/", "/embed/playlist/") + "?utm_source=generator"
+                st.components.v1.html(
+                    f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
+                    height=160
+                )
+            
+            if msg.get("has_file"):
+                st.caption("*(📎 Included an attachment)*")
+            if msg.get("audio_bytes"):
+                st.audio(msg["audio_bytes"], format="audio/mp3")
 
-# --- THE FIXED INPUT BLOCK ---
-if user_prompt := st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio..."):
+# --- Get Input from either Chat or Sidebar Check-In ---
+user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")
+pending_checkin = getattr(st.session_state, "pending_checkin", None)
+
+if pending_checkin:
+    user_prompt = pending_checkin
+    st.session_state.pending_checkin = None
+
+# --- PROCESS THE INPUT ---
+if user_prompt:
     
     # Check if we have files from the sidebar
     file_bytes = None
@@ -238,6 +294,22 @@ if user_prompt := st.chat_input("Type your messy thought, or press Enter to just
             cos_response = asyncio.run(get_agent_response(user_prompt, file_bytes, mime_type))
             if not cos_response.strip():
                 cos_response = "The team processed your request but returned no text output."
+                
+            # --- FOOLPROOF SPOTIFY INJECTION ---
+            # If the user did a check-in, we bypass the LLM and forcefully append the Spotify link!
+            if "Daily Check-In:" in user_prompt:
+                from spotify_tools import recommend_spotify_playlist
+                if "Energy Level is 1/" in user_prompt or "Energy Level is 2/" in user_prompt or "Energy Level is 3/" in user_prompt:
+                    forced_spotify = recommend_spotify_playlist("lofi")
+                elif "Energy Level is 8/" in user_prompt or "Energy Level is 9/" in user_prompt or "Energy Level is 10/" in user_prompt:
+                    forced_spotify = recommend_spotify_playlist("high_energy")
+                elif "Focus Level is 1/" in user_prompt or "Focus Level is 2/" in user_prompt or "Focus Level is 3/" in user_prompt:
+                    forced_spotify = recommend_spotify_playlist("brown_noise")
+                else:
+                    forced_spotify = recommend_spotify_playlist("focus")
+                
+                cos_response += f"\n\n***\n**Direct Audio Link:**\n{forced_spotify}"
+                
         except Exception as e:
             if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e):
                 cos_response = "⚠️ **Rate Limit Exceeded:** The AI API is currently rate-limited (429). Please wait a moment and try again."
@@ -256,7 +328,21 @@ if user_prompt := st.chat_input("Type your messy thought, or press Enter to just
             st.error(f"Failed to generate audio: {e}")
 
     st.session_state.messages.append({"role": "assistant", "avatar": "👔", "content": cos_response, "audio_bytes": audio_bytes})
+    save_chat_history(st.session_state.session_id, st.session_state.messages)
+    
     with st.chat_message("assistant", avatar="👔"):
         st.write(cos_response)
+        
+        # Check for standard Spotify URLs in Live Response
+        spotify_pattern = r'(https://open\.spotify\.com/playlist/[a-zA-Z0-9]+)'
+        spotify_matches = [url.strip() for url in re.findall(spotify_pattern, cos_response)]
+        
+        for url in spotify_matches:
+            embed_url = url.replace("/playlist/", "/embed/playlist/") + "?utm_source=generator"
+            st.components.v1.html(
+                f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
+                height=160
+            )
+            
         if audio_bytes:
-            st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+            st.audio(audio_bytes, format="audio/mp3", autoplay=False)

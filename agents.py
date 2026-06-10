@@ -9,13 +9,17 @@ from tools import (
     get_current_datetime
 )
 from memory_tools import store_memory, search_memory
+from spotify_tools import recommend_spotify_playlist
+from notion_tools import search_notion, read_notion_page, create_notion_page
 from workspace_tools import (
     read_gmail_inbox, 
     get_calendar_events,
     read_google_doc,
     read_google_sheet,
     read_google_slide,
-    send_email
+    send_email,
+    create_calendar_event,
+    create_google_doc
 )
 from mcp_config import gitlab_mcp_client
 
@@ -45,6 +49,7 @@ Your responsibilities:
 - **Combat Paralysis**: Break large, overwhelming documents or email clusters into structured, micro-step bullet points.
 - **Task Framing**: For every task list, explicitly state: Impact, Risk of Ignoring, and Dependencies.
 - **Time-boxing**: Use time-boxing structures for all work periods.
+- **Knowledge Management**: Use Notion tools to search the user's workspace, draft meeting notes, or retrieve project wikis.
 - **Escalation**: Always forward complex structural schedule shifts to the CoS agent for strategic authorization.
 """
 
@@ -56,10 +61,14 @@ ea_agent = Agent(
         read_gmail_inbox, 
         get_calendar_events, 
         read_google_doc, 
-        read_google_sheet, 
         read_google_slide, 
         breakdown_complex_task,
-        send_email
+        send_email,
+        create_calendar_event,
+        create_google_doc,
+        search_notion,
+        read_notion_page,
+        create_notion_page
     ] + gitlab_tools,
 )
 
@@ -81,9 +90,19 @@ coach_agent = Agent(
 
 # 3. Chief of Staff Agent (Root Agent / Tie-breaker / Coordinator)
 CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
-You are the Neurodivergent-Friendly Chief of Staff (CoS). You are the single source of truth and supervisor over the Executive Assistant (EA) and Executive Coach agents. All communications to the user are compiled and channeled through you.
-
-Your responsibilities:
+    You are the Chief of Staff for a neurodivergent (ADHD) executive. You are the ONLY agent allowed to speak directly to the user.
+    
+    CRITICAL WORKFLOW:
+    1. If the user asks you to schedule something or read their calendar, use the calendar tools.
+    2. If the user needs an email drafted or sent, use the Gmail tools.
+    3. If the user needs a document written, use the Google Docs tools.
+    4. If a task requires deep planning, GitLab access, or Notion knowledge management, delegate to the Executive Assistant.
+    5. You have a long-term memory vector database. Use `store_memory` to save preferences, and `search_memory` when they ask about past notes.
+    6. **PARTNER TASK DELEGATION**: The user shares a Notion page called "Household Quests" with their partner. When the user asks "what do I need to do today" or logs in, ALWAYS delegate to the EA to search Notion for "Household Quests" and include any chores listed there into the daily summary.
+    7. If the user submits a Daily Check-In, rely on the Coach's advice and ALWAYS use the `recommend_spotify_playlist` tool. 
+    
+    IMPORTANT: When you use the `recommend_spotify_playlist` tool, it will return a clickable Markdown link to a Spotify playlist. You MUST include this link in your final response so the user can click it!
+    
 - **Prioritize and connect** daily emails and tactical tasks from the ExecutiveAssistant to the user's long-term strategic goals.
 - **Tie-breaking**: If the EA and Coach propose conflicting path actions, your primary directive is to break the tie using long-term strategic goals.
 - **Synthesize outputs** into low-clutter, high-readability markdown dashboards. Never overwhelm the user; use clear headers, bulleted impact summaries, and distinct visual anchors.
@@ -97,7 +116,20 @@ chief_of_staff = Agent(
     description="Root agent and coordinator who compiles reports, aligns daily items with strategic goals, and prevents burnout. Has access to time, persistent memory, and can send emails.",
     instruction=CHIEF_OF_STAFF_INSTRUCTION,
     sub_agents=[ea_agent, coach_agent],
-    tools=[send_email, get_current_datetime, store_memory, search_memory],
+    tools=[
+        read_gmail_inbox,
+        get_calendar_events,
+        read_google_doc,
+        read_google_sheet,
+        read_google_slide,
+        send_email,
+        create_calendar_event,
+        create_google_doc,
+        get_current_datetime, 
+        store_memory, 
+        search_memory,
+        recommend_spotify_playlist
+    ],
 )
 
 # Compatibility aliases

@@ -1,23 +1,31 @@
 # Environments
-.venv/
-__pycache__/
-
-# Secrets and Credentials
 .env
-credentials.json
-token.json
-gemini_token.json
-google_token.json
-*.json
-
-# IDE
-.vscode/
-.idea/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Python
-*.pyc
-*.pyo
-*.pyd
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Mac
+# Local Credentials & Secrets
+credentials.json
+token.json
+client_secret.json
+
+# Local Memory & DBs
+memory_db.sqlite
+chat_history/
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -11,8 +11,8 @@ from email.message import EmailMessage
 SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/documents.readonly',
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/documents',
     'https://www.googleapis.com/auth/spreadsheets.readonly',
     'https://www.googleapis.com/auth/presentations.readonly'
 ]
@@ -73,6 +73,7 @@ def read_gmail_inbox(max_results: int = 5) -> list[dict]:
                     sender = header['value']
                     
             email_data.append({
+                "id": message['id'],
                 "sender": sender,
                 "subject": subject,
                 "snippet": msg.get('snippet', '')
@@ -231,6 +232,76 @@ def read_google_slide(presentation_id: str) -> str:
         return text if text else "Presentation is empty."
     except Exception as e:
         return f"Error reading Google Slides: {str(e)}"
+
+def create_calendar_event(summary: str, start_time: str, end_time: str, description: str = "") -> dict:
+    """Create a new event on the user's primary Google Calendar.
+    
+    Args:
+        summary (str): The title of the event.
+        start_time (str): ISO 8601 formatted start time (e.g., '2026-06-10T10:00:00-04:00').
+        end_time (str): ISO 8601 formatted end time (e.g., '2026-06-10T11:00:00-04:00').
+        description (str): Description or notes for the event. Default is empty.
+        
+    Returns:
+        dict: Status message with event link.
+    """
+    try:
+        creds = authenticate_google_workspace()
+        service = build('calendar', 'v3', credentials=creds)
+        
+        event = {
+            'summary': summary,
+            'description': description,
+            'start': {
+                'dateTime': start_time,
+                'timeZone': 'UTC',
+            },
+            'end': {
+                'dateTime': end_time,
+                'timeZone': 'UTC',
+            },
+        }
+        
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        return {"status": "success", "event_link": created_event.get('htmlLink')}
+    except Exception as e:
+        return {"error": f"Failed to create calendar event: {str(e)}"}
+
+def create_google_doc(title: str, text_content: str) -> dict:
+    """Create a new Google Document and insert text content into it.
+    
+    Args:
+        title (str): The title of the new document.
+        text_content (str): The text to insert into the document body.
+        
+    Returns:
+        dict: Status message with the document ID.
+    """
+    try:
+        creds = authenticate_google_workspace()
+        service = build('docs', 'v1', credentials=creds)
+        
+        # Create the blank document
+        document = service.documents().create(body={'title': title}).execute()
+        doc_id = document.get('documentId')
+        
+        # Insert the text content
+        requests = [
+            {
+                'insertText': {
+                    'location': {
+                        'index': 1,
+                    },
+                    'text': text_content
+                }
+            }
+        ]
+        
+        service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+        
+        return {"status": "success", "document_id": doc_id, "document_link": f"https://docs.google.com/document/d/{doc_id}/edit"}
+    except Exception as e:
+        return {"error": f"Failed to create Google Doc: {str(e)}"}
 
 if __name__ == '__main__':
     print("Initiating Google Workspace First-Time User Handshake with expanded scopes...")

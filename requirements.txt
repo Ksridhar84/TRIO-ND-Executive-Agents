@@ -1,9 +1,11 @@
 google-adk>=2.2.0
 python-dotenv
 mcp
+streamlit
+google-genai
+google-auth-oauthlib
 google-api-python-client
 google-auth-httplib2
-google-auth-oauthlib
 schedule
 gTTS
 streamlit-mic-recorder
