@@ -25,7 +25,13 @@ from workspace_tools import (
 from mcp_config import gitlab_mcp_client
 
 # Fetch GitLab remote tools synchronously during module load time
-gitlab_tools = asyncio.run(gitlab_mcp_client.get_tools())
+gitlab_tools = []
+if gitlab_mcp_client:
+    try:
+        gitlab_tools = asyncio.run(gitlab_mcp_client.get_tools())
+    except Exception as e:
+        print(f"WARNING: Could not fetch GitLab tools: {e}")
+
 
 # Common ADHD/dyslexia-friendly formatting guidelines for all agents
 ADHD_DYSLEXIA_FORMATTING = """
