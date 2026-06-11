@@ -369,7 +369,8 @@ if user_prompt:
             if "RESOURCE_EXHAUSTED" in str(e) or "429" in str(e):
                 cos_response = "⚠️ **Rate Limit Exceeded:** The AI API is currently rate-limited (429). Please wait a moment and try again."
             else:
-                cos_response = f"**Error executing ADK workflow:**\n{e}"
+                import traceback
+                cos_response = f"**Error executing ADK workflow:**\n{e}\n\n```python\n{traceback.format_exc()}\n```"
 
     if avatar_b64:
         avatar_placeholder.markdown(f'<img src="data:image/png;base64,{avatar_b64}" class="avatar-idle">', unsafe_allow_html=True)
