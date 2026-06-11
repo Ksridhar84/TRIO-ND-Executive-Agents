@@ -255,27 +255,27 @@ for msg in st.session_state.messages:
 
             # Add Feedback & Copy UI for Assistant messages
             if msg["role"] == "assistant":
-                col1, col2, col3, _ = st.columns([1, 1, 1, 5])
+                col_spacer, col1, col2, col3 = st.columns([6, 1, 1, 1.5])
                 msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
                 
                 with col1:
                     if st.session_state.get(f"liked_{msg_id}"):
-                        st.button("💖 Thank you!", key=f"up_{msg_id}_done", type="primary", disabled=True)
+                        st.button("💖", key=f"up_{msg_id}_done", type="primary", disabled=True)
                     else:
-                        if st.button("👍 Good", key=f"up_{msg_id}"):
+                        if st.button("👍", key=f"up_{msg_id}"):
                             st.session_state[f"liked_{msg_id}"] = True
-                            store_memory(f"User Feedback: The user PREFERS this style of response: {content[:200]}...")
+                            store_memory("Agent Feedback", f"The user PREFERS this style of response: {content[:200]}...")
                             st.rerun()
                 with col2:
                     if st.session_state.get(f"disliked_{msg_id}"):
-                        st.button("👎 Noted", key=f"down_{msg_id}_done", type="primary", disabled=True)
+                        st.button("👎", key=f"down_{msg_id}_done", type="primary", disabled=True)
                     else:
-                        if st.button("👎 Bad", key=f"down_{msg_id}"):
+                        if st.button("👎", key=f"down_{msg_id}"):
                             st.session_state[f"disliked_{msg_id}"] = True
-                            store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
+                            store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
                             st.rerun()
                 with col3:
-                    if st.button("📋 Copy Text", key=f"copy_{msg_id}"):
+                    if st.button("📋 Copy", key=f"copy_{msg_id}"):
                         st.session_state[f"show_copy_{msg_id}"] = not st.session_state.get(f"show_copy_{msg_id}", False)
                 
                 if st.session_state.get(f"show_copy_{msg_id}", False):
@@ -376,27 +376,27 @@ if user_prompt:
                 st.audio(audio_bytes, format="audio/mp3", autoplay=False)
                 
             # Add Feedback & Copy UI for the live message
-            col1, col2, col3, _ = st.columns([1, 1, 1, 5])
+            col_spacer, col1, col2, col3 = st.columns([6, 1, 1, 1.5])
             live_msg_id = st.session_state.messages[-1]["id"]
             
             with col1:
                 if st.session_state.get(f"liked_{live_msg_id}"):
-                    st.button("💖 Thank you!", key=f"up_{live_msg_id}_done", type="primary", disabled=True)
+                    st.button("💖", key=f"up_{live_msg_id}_done", type="primary", disabled=True)
                 else:
-                    if st.button("👍 Good", key=f"up_{live_msg_id}"):
+                    if st.button("👍", key=f"up_{live_msg_id}"):
                         st.session_state[f"liked_{live_msg_id}"] = True
-                        store_memory(f"User Feedback: The user PREFERS this style of response: {cos_response[:200]}...")
+                        store_memory("Agent Feedback", f"The user PREFERS this style of response: {cos_response[:200]}...")
                         st.rerun()
             with col2:
                 if st.session_state.get(f"disliked_{live_msg_id}"):
-                    st.button("👎 Noted", key=f"down_{live_msg_id}_done", type="primary", disabled=True)
+                    st.button("👎", key=f"down_{live_msg_id}_done", type="primary", disabled=True)
                 else:
-                    if st.button("👎 Bad", key=f"down_{live_msg_id}"):
+                    if st.button("👎", key=f"down_{live_msg_id}"):
                         st.session_state[f"disliked_{live_msg_id}"] = True
-                        store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
+                        store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
                         st.rerun()
             with col3:
-                if st.button("📋 Copy Text", key=f"copy_{live_msg_id}"):
+                if st.button("📋 Copy", key=f"copy_{live_msg_id}"):
                     st.session_state[f"show_copy_{live_msg_id}"] = not st.session_state.get(f"show_copy_{live_msg_id}", False)
             
             if st.session_state.get(f"show_copy_{live_msg_id}", False):
