@@ -281,12 +281,12 @@ for msg in st.session_state.messages:
 
             # Add Feedback & Copy UI for Assistant messages
             if msg["role"] == "assistant":
-                col_spacer, col1, col2, col3 = st.columns([6, 1, 1, 1.5])
+                col_spacer, col1, col2, col3 = st.columns([4, 1.5, 2.5, 1.5])
                 msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
                 
                 with col1:
                     if st.session_state.get(f"liked_{msg_id}"):
-                        st.button("💖", key=f"up_{msg_id}_done", type="primary", disabled=True)
+                        st.button("💖 Saved!", key=f"up_{msg_id}_done", type="primary", disabled=True)
                     else:
                         if st.button("👍", key=f"up_{msg_id}"):
                             st.session_state[f"liked_{msg_id}"] = True
@@ -294,7 +294,7 @@ for msg in st.session_state.messages:
                             st.rerun()
                 with col2:
                     if st.session_state.get(f"disliked_{msg_id}"):
-                        st.button("👎", key=f"down_{msg_id}_done", type="primary", disabled=True)
+                        st.button("😢 Feedback Saved", key=f"down_{msg_id}_done", type="primary", disabled=True)
                     else:
                         if st.button("👎", key=f"down_{msg_id}"):
                             st.session_state[f"disliked_{msg_id}"] = True

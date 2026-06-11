@@ -64,6 +64,7 @@ ea_agent = Agent(
     name="ExecutiveAssistant",
     description="Tactical execution agent that manages inbox, prioritizes calendar events, breaks down complex tasks, and sends outbound emails.",
     model="gemini-2.5-flash",
+    disallow_transfer_to_parent=True,
     instruction=EXECUTIVE_ASSISTANT_INSTRUCTION,
     tools=[
         read_gmail_inbox, 
@@ -93,6 +94,7 @@ coach_agent = Agent(
     name="ExecutiveCoach",
     description="Uplifting coach that checks in on wellness, prevents tunnel vision, and provides pros/cons lists for decision making.",
     model="gemini-2.5-flash",
+    disallow_transfer_to_parent=True,
     instruction=EXECUTIVE_COACH_INSTRUCTION,
     tools=[analyze_decision_matrix, get_wellness_break_recommendation, get_cheery_inspiration],
 )
