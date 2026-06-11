@@ -61,6 +61,27 @@ def read_gmail_inbox(max_results: int = 50) -> list[dict]:
     Returns:
         list[dict]: A list of unread emails with sender, subject, and snippet.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return [
+            {
+                "id": "mock_email_1",
+                "sender": "CEO / Board President <president@company.com>",
+                "subject": "Urgent: Project Pitch Slide Review required by tomorrow 9 AM",
+                "snippet": "Hi, please make sure you review the slides for the pitch tomorrow. We need to finalize the cloud migration architecture slides before the presentation."
+            },
+            {
+                "id": "mock_email_2",
+                "sender": "HR Team <hr@company.com>",
+                "subject": "Action Needed: Complete quarterly health wellness survey",
+                "snippet": "Hello, this is a reminder to complete your quarterly survey. We value your feedback on burnout prevention and wellness."
+            },
+            {
+                "id": "mock_email_3",
+                "sender": "Partner <partner@household.org>",
+                "subject": "Household Quests: chore list updated",
+                "snippet": "Hey, I added the grocery shopping and trash disposal chores to our Notion shared page. Let's finish them tonight."
+            }
+        ]
     try:
         creds = authenticate_google_workspace()
         service = build('gmail', 'v1', credentials=creds)
@@ -107,6 +128,8 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
     Returns:
         dict: Status message indicating success or failure.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return {"status": "success", "message_id": "mock_email_send_id_12345"}
     try:
         creds = authenticate_google_workspace()
         service = build('gmail', 'v1', credentials=creds)
@@ -138,6 +161,28 @@ def get_calendar_events(max_results: int = 5) -> list[dict]:
     Returns:
         list[dict]: A list of upcoming events with summary, start, and end times.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        today = datetime.date.today()
+        return [
+            {
+                "summary": "Google Cloud Architecture Consulting Session",
+                "start": f"{today}T10:00:00Z",
+                "end": f"{today}T11:00:00Z",
+                "link": "https://calendar.google.com/mock"
+            },
+            {
+                "summary": "Client Data Migration Sync",
+                "start": f"{today}T13:00:00Z",
+                "end": f"{today}T14:00:00Z",
+                "link": "https://calendar.google.com/mock"
+            },
+            {
+                "summary": "Daily Wellness Coaching Check-In",
+                "start": f"{today}T16:30:00Z",
+                "end": f"{today}T17:00:00Z",
+                "link": "https://calendar.google.com/mock"
+            }
+        ]
     try:
         creds = authenticate_google_workspace()
         service = build('calendar', 'v3', credentials=creds)
@@ -175,6 +220,8 @@ def read_google_doc(document_id: str) -> str:
     Returns:
         str: The full text content of the document.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return "This is a mock Google Doc content. It contains summary points for the consulting project details."
     try:
         creds = authenticate_google_workspace()
         service = build('docs', 'v1', credentials=creds)
@@ -203,6 +250,8 @@ def read_google_sheet(spreadsheet_id: str, range_name: str) -> list[list]:
     Returns:
         list[list]: The rows of data from the sheet.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return [["Header 1", "Header 2"], ["Row 1 Col 1", "Row 1 Col 2"], ["Row 2 Col 1", "Row 2 Col 2"]]
     try:
         creds = authenticate_google_workspace()
         service = build('sheets', 'v4', credentials=creds)
@@ -226,6 +275,8 @@ def read_google_slide(presentation_id: str) -> str:
     Returns:
         str: The extracted text from the slides.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return "\n--- Slide 1 ---\nTitle: Pitch Presentation\n\n--- Slide 2 ---\nContent: Enterprise Cloud Architecture Overview"
     try:
         creds = authenticate_google_workspace()
         service = build('slides', 'v1', credentials=creds)
@@ -258,6 +309,8 @@ def create_calendar_event(summary: str, start_time: str, end_time: str, descript
     Returns:
         dict: Status message with event link.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return {"status": "success", "event_link": "https://calendar.google.com/mock-event-link"}
     try:
         creds = authenticate_google_workspace()
         service = build('calendar', 'v3', credentials=creds)
@@ -290,6 +343,8 @@ def create_google_doc(title: str, text_content: str) -> dict:
     Returns:
         dict: Status message with the document ID.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return {"status": "success", "document_id": "mock_doc_id_9999", "document_link": "https://docs.google.com/document/d/mock-doc/edit"}
     try:
         creds = authenticate_google_workspace()
         service = build('docs', 'v1', credentials=creds)

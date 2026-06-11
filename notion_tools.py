@@ -22,6 +22,14 @@ def search_notion(query: str) -> str:
     Returns:
         str: A summary of the matching pages and their IDs.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        query_lower = query.lower()
+        if "quest" in query_lower or "house" in query_lower or "chore" in query_lower:
+            return "Found 1 matching items in Notion:\n- [page] **Household Quests** (ID: mock_notion_household_quests)\n  Link: https://www.notion.so/mock-household-quests"
+        elif "linkedin" in query_lower or "strategy" in query_lower or "brand" in query_lower:
+            return "Found 1 matching items in Notion:\n- [page] **LinkedIn Strategy** (ID: mock_notion_linkedin_strategy)\n  Link: https://www.notion.so/mock-linkedin-strategy"
+        else:
+            return f"Found 2 matching items in Notion:\n- [page] **LinkedIn Strategy** (ID: mock_notion_linkedin_strategy)\n  Link: https://www.notion.so/mock-linkedin-strategy\n- [page] **Household Quests** (ID: mock_notion_household_quests)\n  Link: https://www.notion.so/mock-household-quests"
     try:
         notion = _get_notion_client()
         results = notion.search(query=query).get("results", [])
@@ -57,6 +65,24 @@ def read_notion_page(page_id: str) -> str:
     Returns:
         str: The extracted text content of the page.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        if "quests" in page_id or "household" in page_id or "mock_notion_household_quests" in page_id:
+            return """# Household Quests (Chore List)
+* [x] Pay electric bill (Due: yesterday)
+* [ ] Take out recycling bin (Responsible: User, Due: tonight)
+* [ ] Buy groceries: almond milk, avocados, eggs (Responsible: User)
+* [x] Vacuum the living room"""
+        elif "linkedin" in page_id or "strategy" in page_id or "mock_notion_linkedin_strategy" in page_id:
+            return """# LinkedIn Strategy & Brand Pillars
+
+## Brand Pillars
+1. **Demystifying AI for Enterprise**: Explain complex agentic workflows in simple, non-hype terms.
+2. **Neuro-inclusive Design**: Advocate for software interfaces built for ADHD/Autistic minds.
+3. **Executive Burnout Prevention**: Share strategies to manage energy levels and avoid tunnel-vision exhaustion.
+
+## Tone
+Supportive, authentic, and technically grounded."""
+        return "Notion Page content is empty."
     try:
         notion = _get_notion_client()
         blocks = notion.blocks.children.list(block_id=page_id).get("results", [])
@@ -97,6 +123,8 @@ def create_notion_page(title: str, content: str, parent_page_id: str) -> str:
     Returns:
         str: A success message with the new page URL, or an error.
     """
+    if os.environ.get("DEMO_MODE") == "True":
+        return f"Successfully created Notion page '{title}'.\nURL: https://www.notion.so/mock-created-page-12345"
     try:
         notion = _get_notion_client()
         
