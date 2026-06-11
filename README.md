@@ -8,6 +8,36 @@ The ND TRIO Executive OS is a team of specialized AI agents designed as a "Cogni
 2. **Executive Assistant (EA) Agent**: This agent is responsible for tactical operations and deep-work management. It connects to Google Workspace (Gmail, Calendar, Docs) and Notion to draft emails, read schedules, manage project wikis, and handle "Partner Delegated Tasks" (e.g., household chores added to a shared Notion page by a spouse). It also integrates with GitLab via MCP for code tracking.
 3. **Executive Coach Agent**: This agent's role is to monitor emotional and cognitive wellness. It steps in during "Daily Check-Ins" to assess burnout, energy, and focus levels. It provides neuro-inclusive interventions, explicitly breaking ties between the other agents, and embeds live Lofi or Brown Noise Spotify playlists into the dashboard based on the user's real-time sensory needs.
 
+### High-Level System Architecture
+
+```mermaid
+graph TD
+    User([Neurodivergent User]) -->|Voice / Text / Images| CoS{Chief of Staff Agent<br>Root Orchestrator}
+    
+    subgraph "TRIO OS 3-Agent Hierarchy"
+        CoS -->|Delegates complex work| EA[Executive Assistant Agent]
+        CoS -->|Checks wellness| Coach[Executive Coach Agent]
+    end
+
+    subgraph "External Integrations & Tools"
+        EA <-->|OAuth 2.0| GW[Google Workspace<br>Gmail, Calendar, Docs]
+        EA <-->|API| Notion[Notion API<br>Partner Sync & Wiki]
+        EA <-->|MCP Server| GitLab[GitLab Code Repositories]
+        
+        Coach <-->|Links| Spotify[Spotify Sensory Playlists]
+        
+        CoS <-->|Local Embeddings| Memory[(SQLite Vector Memory)]
+    end
+    
+    classDef primary fill:#4285F4,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef secondary fill:#34A853,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef tools fill:#FBBC05,stroke:#fff,stroke-width:2px,color:#333;
+    
+    class CoS primary;
+    class EA,Coach secondary;
+    class GW,Notion,GitLab,Spotify,Memory tools;
+```
+
 ### 🏆 Hackathon Judging Criteria Alignment
 
 *   **Technological Implementation**: Built on the **Google Agent Development Kit (ADK)** and Gemini, the system demonstrates extremely robust integration. It utilizes Google Workspace OAuth 2.0 (Gmail, Calendar, Docs), the Model Context Protocol (MCP) for secure GitLab access, the Notion API for "Second Brain" storage, and `sqlite-vec` for local vector memory. It also features autonomous Python background schedulers (`scheduler.py`) that run independently of the frontend.
