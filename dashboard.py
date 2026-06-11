@@ -1,7 +1,16 @@
 import streamlit as st
+import os
+
+# Map Streamlit secrets to environment variables for cloud deployment
+try:
+    if hasattr(st, "secrets"):
+        for key in st.secrets:
+            os.environ[key] = str(st.secrets[key])
+except Exception:
+    pass
+
 import time
 import asyncio
-import os
 import datetime
 import base64
 from dotenv import load_dotenv
@@ -18,6 +27,7 @@ from memory_tools import store_memory
 # Setup API Key for Streamlit
 load_dotenv()
 os.environ["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
+
 
 # Real Agent Backend Integration
 async def get_agent_response(prompt_text, file_bytes=None, mime_type=None):
