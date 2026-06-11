@@ -63,6 +63,7 @@ Your responsibilities:
 ea_agent = Agent(
     name="ExecutiveAssistant",
     description="Tactical execution agent that manages inbox, prioritizes calendar events, breaks down complex tasks, and sends outbound emails.",
+    model="gemini-2.5-flash",
     instruction=EXECUTIVE_ASSISTANT_INSTRUCTION,
     tools=[
         read_gmail_inbox, 
@@ -91,6 +92,7 @@ Your responsibilities:
 coach_agent = Agent(
     name="ExecutiveCoach",
     description="Uplifting coach that checks in on wellness, prevents tunnel vision, and provides pros/cons lists for decision making.",
+    model="gemini-2.5-flash",
     instruction=EXECUTIVE_COACH_INSTRUCTION,
     tools=[analyze_decision_matrix, get_wellness_break_recommendation, get_cheery_inspiration],
 )
@@ -124,6 +126,7 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
 chief_of_staff = Agent(
     name="ChiefOfStaff",
     description="Root agent and coordinator who compiles reports, aligns daily items with strategic goals, and prevents burnout. Has access to time, persistent memory, and can send emails.",
+    model="gemini-2.5-flash",
     instruction=CHIEF_OF_STAFF_INSTRUCTION,
     sub_agents=[ea_agent, coach_agent],
     tools=[
