@@ -5,6 +5,8 @@ from notion_client import Client
 
 load_dotenv()
 NOTION_TOKEN = os.getenv("NOTION_API_TOKEN")
+if NOTION_TOKEN:
+    NOTION_TOKEN = NOTION_TOKEN.strip()
 
 def _get_notion_client():
     if not NOTION_TOKEN:

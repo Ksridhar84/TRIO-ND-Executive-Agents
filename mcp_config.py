@@ -18,7 +18,12 @@ except Exception:
 
 # Retrieve GitLab configuration parameters (allow fallback for GITLAB_PERSONAL_ACCESS_TOKEN)
 gitlab_token = os.environ.get("GITLAB_TOKEN") or os.environ.get("GITLAB_PERSONAL_ACCESS_TOKEN")
+if gitlab_token:
+    gitlab_token = gitlab_token.strip()
+    
 gitlab_project_id = os.environ.get("GITLAB_PROJECT_ID")
+if gitlab_project_id:
+    gitlab_project_id = gitlab_project_id.strip()
 
 gitlab_mcp_client = None
 

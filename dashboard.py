@@ -35,7 +35,9 @@ from memory_tools import store_memory
 
 # Setup API Key for Streamlit
 load_dotenv()
-os.environ["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
+api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
+if api_key:
+    os.environ["GEMINI_API_KEY"] = api_key.strip()
 
 
 # Real Agent Backend Integration
