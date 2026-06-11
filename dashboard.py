@@ -197,6 +197,10 @@ with st.sidebar:
     if avatar_b64:
         avatar_placeholder.markdown(f'<img src="data:image/png;base64,{avatar_b64}" class="avatar-idle">', unsafe_allow_html=True)
         
+    # Demo Mode Warning Banner
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
+        st.warning("🛡️ **Demo Mode Active**\n(Mock data is enabled to protect private calendars/emails)")
+
     st.header("📎 Multi-Modal Hub")
     st.markdown("Upload files, hand-written notes, or record a voice memo. They will be passed to your agents on your next chat message!")
     

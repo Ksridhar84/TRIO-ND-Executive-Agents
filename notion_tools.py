@@ -22,7 +22,7 @@ def search_notion(query: str) -> str:
     Returns:
         str: A summary of the matching pages and their IDs.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         query_lower = query.lower()
         if "quest" in query_lower or "house" in query_lower or "chore" in query_lower:
             return "Found 1 matching items in Notion:\n- [page] **Household Quests** (ID: mock_notion_household_quests)\n  Link: https://www.notion.so/mock-household-quests"
@@ -65,7 +65,7 @@ def read_notion_page(page_id: str) -> str:
     Returns:
         str: The extracted text content of the page.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         if "quests" in page_id or "household" in page_id or "mock_notion_household_quests" in page_id:
             return """# Household Quests (Chore List)
 * [x] Pay electric bill (Due: yesterday)
@@ -123,7 +123,7 @@ def create_notion_page(title: str, content: str, parent_page_id: str) -> str:
     Returns:
         str: A success message with the new page URL, or an error.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return f"Successfully created Notion page '{title}'.\nURL: https://www.notion.so/mock-created-page-12345"
     try:
         notion = _get_notion_client()

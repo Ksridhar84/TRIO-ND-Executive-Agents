@@ -61,7 +61,7 @@ def read_gmail_inbox(max_results: int = 50) -> list[dict]:
     Returns:
         list[dict]: A list of unread emails with sender, subject, and snippet.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return [
             {
                 "id": "mock_email_1",
@@ -128,7 +128,7 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
     Returns:
         dict: Status message indicating success or failure.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return {"status": "success", "message_id": "mock_email_send_id_12345"}
     try:
         creds = authenticate_google_workspace()
@@ -161,7 +161,7 @@ def get_calendar_events(max_results: int = 5) -> list[dict]:
     Returns:
         list[dict]: A list of upcoming events with summary, start, and end times.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         today = datetime.date.today()
         return [
             {
@@ -220,7 +220,7 @@ def read_google_doc(document_id: str) -> str:
     Returns:
         str: The full text content of the document.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return "This is a mock Google Doc content. It contains summary points for the consulting project details."
     try:
         creds = authenticate_google_workspace()
@@ -250,7 +250,7 @@ def read_google_sheet(spreadsheet_id: str, range_name: str) -> list[list]:
     Returns:
         list[list]: The rows of data from the sheet.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return [["Header 1", "Header 2"], ["Row 1 Col 1", "Row 1 Col 2"], ["Row 2 Col 1", "Row 2 Col 2"]]
     try:
         creds = authenticate_google_workspace()
@@ -275,7 +275,7 @@ def read_google_slide(presentation_id: str) -> str:
     Returns:
         str: The extracted text from the slides.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return "\n--- Slide 1 ---\nTitle: Pitch Presentation\n\n--- Slide 2 ---\nContent: Enterprise Cloud Architecture Overview"
     try:
         creds = authenticate_google_workspace()
@@ -309,7 +309,7 @@ def create_calendar_event(summary: str, start_time: str, end_time: str, descript
     Returns:
         dict: Status message with event link.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return {"status": "success", "event_link": "https://calendar.google.com/mock-event-link"}
     try:
         creds = authenticate_google_workspace()
@@ -343,7 +343,7 @@ def create_google_doc(title: str, text_content: str) -> dict:
     Returns:
         dict: Status message with the document ID.
     """
-    if os.environ.get("DEMO_MODE") == "True":
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
         return {"status": "success", "document_id": "mock_doc_id_9999", "document_link": "https://docs.google.com/document/d/mock-doc/edit"}
     try:
         creds = authenticate_google_workspace()
