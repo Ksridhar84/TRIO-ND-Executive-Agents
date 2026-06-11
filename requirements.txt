@@ -9,3 +9,4 @@ google-auth-httplib2
 schedule
 gTTS
 streamlit-mic-recorder
+notion-client
