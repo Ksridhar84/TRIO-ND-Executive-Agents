@@ -13,6 +13,7 @@ from agents import chief_of_staff
 from voice_tools import generate_agent_voice
 from streamlit_mic_recorder import mic_recorder
 from chat_tools import save_chat_history, load_chat_history, list_chat_histories
+from memory_tools import store_memory
 
 # Setup API Key for Streamlit
 load_dotenv()
@@ -228,7 +229,7 @@ with st.sidebar:
 # --- Initialize Conversation Session History ---
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?"}
+        {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?", "id": str(uuid.uuid4())[:8]}
     ]
 
 # --- Render the Persistent Chat History ---
@@ -251,6 +252,26 @@ for msg in st.session_state.messages:
                 st.caption("*(📎 Included an attachment)*")
             if msg.get("audio_bytes"):
                 st.audio(msg["audio_bytes"], format="audio/mp3")
+
+            # Add Feedback & Copy UI for Assistant messages
+            if msg["role"] == "assistant":
+                col1, col2, col3, _ = st.columns([1, 1, 1, 5])
+                msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
+                
+                with col1:
+                    if st.button("👍 Good", key=f"up_{msg_id}"):
+                        store_memory(f"User Feedback: The user PREFERS this style of response: {content[:200]}...")
+                        st.toast("✅ Positive feedback stored in agent's memory!")
+                with col2:
+                    if st.button("👎 Bad", key=f"down_{msg_id}"):
+                        store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
+                        st.toast("❌ Negative feedback stored in agent's memory!")
+                with col3:
+                    if st.button("📋 Copy Text", key=f"copy_{msg_id}"):
+                        st.session_state[f"show_copy_{msg_id}"] = not st.session_state.get(f"show_copy_{msg_id}", False)
+                
+                if st.session_state.get(f"show_copy_{msg_id}", False):
+                    st.code(content, language="markdown")
 
 # --- Get Input from either Chat or Sidebar Check-In ---
 user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")
@@ -279,7 +300,7 @@ if user_prompt:
         has_file = True
 
     # 1. Display your text input instantly on screen
-    st.session_state.messages.append({"role": "user", "avatar": "👤", "content": user_prompt, "has_file": has_file})
+    st.session_state.messages.append({"role": "user", "avatar": "👤", "content": user_prompt, "has_file": has_file, "id": str(uuid.uuid4())[:8]})
     with st.chat_message("user", avatar="👤"):
         st.write(user_prompt)
         if has_file:
@@ -327,7 +348,7 @@ if user_prompt:
         except Exception as e:
             st.error(f"Failed to generate audio: {e}")
 
-    st.session_state.messages.append({"role": "assistant", "avatar": "👔", "content": cos_response, "audio_bytes": audio_bytes})
+    st.session_state.messages.append({"role": "assistant", "avatar": "👔", "content": cos_response, "audio_bytes": audio_bytes, "id": str(uuid.uuid4())[:8]})
     save_chat_history(st.session_state.session_id, st.session_state.messages)
     
     with st.chat_message("assistant", avatar="👔"):
@@ -343,6 +364,24 @@ if user_prompt:
                 f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
                 height=160
             )
+            if audio_bytes:
+                st.audio(audio_bytes, format="audio/mp3", autoplay=False)
+                
+            # Add Feedback & Copy UI for the live message
+            col1, col2, col3, _ = st.columns([1, 1, 1, 5])
+            live_msg_id = st.session_state.messages[-1]["id"]
             
-        if audio_bytes:
-            st.audio(audio_bytes, format="audio/mp3", autoplay=False)
+            with col1:
+                if st.button("👍 Good", key=f"up_{live_msg_id}"):
+                    store_memory(f"User Feedback: The user PREFERS this style of response: {cos_response[:200]}...")
+                    st.toast("✅ Positive feedback stored in agent's memory!")
+            with col2:
+                if st.button("👎 Bad", key=f"down_{live_msg_id}"):
+                    store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
+                    st.toast("❌ Negative feedback stored in agent's memory!")
+            with col3:
+                if st.button("📋 Copy Text", key=f"copy_{live_msg_id}"):
+                    st.session_state[f"show_copy_{live_msg_id}"] = not st.session_state.get(f"show_copy_{live_msg_id}", False)
+            
+            if st.session_state.get(f"show_copy_{live_msg_id}", False):
+                st.code(cos_response, language="markdown")
