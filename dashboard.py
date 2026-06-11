@@ -232,6 +232,11 @@ if "messages" not in st.session_state:
         {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?", "id": str(uuid.uuid4())[:8]}
     ]
 
+# Ensure all legacy messages have a permanent ID to prevent duplicate key errors on reruns
+for msg in st.session_state.messages:
+    if "id" not in msg:
+        msg["id"] = str(uuid.uuid4())[:8]
+
 # --- Render the Persistent Chat History ---
 for msg in st.session_state.messages:
             st.write(msg["content"])
@@ -359,45 +364,5 @@ if user_prompt:
     st.session_state.messages.append({"role": "assistant", "avatar": "👔", "content": cos_response, "audio_bytes": audio_bytes, "id": str(uuid.uuid4())[:8]})
     save_chat_history(st.session_state.session_id, st.session_state.messages)
     
-    with st.chat_message("assistant", avatar="👔"):
-        st.write(cos_response)
-        
-        # Check for standard Spotify URLs in Live Response
-        spotify_pattern = r'(https://open\.spotify\.com/playlist/[a-zA-Z0-9]+)'
-        spotify_matches = [url.strip() for url in re.findall(spotify_pattern, cos_response)]
-        
-        for url in spotify_matches:
-            embed_url = url.replace("/playlist/", "/embed/playlist/") + "?utm_source=generator"
-            st.components.v1.html(
-                f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
-                height=160
-            )
-            if audio_bytes:
-                st.audio(audio_bytes, format="audio/mp3", autoplay=False)
-                
-            # Add Feedback & Copy UI for the live message
-            col_spacer, col1, col2, col3 = st.columns([6, 1, 1, 1.5])
-            live_msg_id = st.session_state.messages[-1]["id"]
-            
-            with col1:
-                if st.session_state.get(f"liked_{live_msg_id}"):
-                    st.button("💖", key=f"up_{live_msg_id}_done", type="primary", disabled=True)
-                else:
-                    if st.button("👍", key=f"up_{live_msg_id}"):
-                        st.session_state[f"liked_{live_msg_id}"] = True
-                        store_memory("Agent Feedback", f"The user PREFERS this style of response: {cos_response[:200]}...")
-                        st.rerun()
-            with col2:
-                if st.session_state.get(f"disliked_{live_msg_id}"):
-                    st.button("👎", key=f"down_{live_msg_id}_done", type="primary", disabled=True)
-                else:
-                    if st.button("👎", key=f"down_{live_msg_id}"):
-                        st.session_state[f"disliked_{live_msg_id}"] = True
-                        store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
-                        st.rerun()
-            with col3:
-                if st.button("📋 Copy", key=f"copy_{live_msg_id}"):
-                    st.session_state[f"show_copy_{live_msg_id}"] = not st.session_state.get(f"show_copy_{live_msg_id}", False)
-            
-            if st.session_state.get(f"show_copy_{live_msg_id}", False):
-                st.code(cos_response, language="markdown")
+    # Rerun the app to seamlessly render the new message through the persistent loop above
+    st.rerun()
