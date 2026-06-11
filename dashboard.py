@@ -281,10 +281,12 @@ for msg in st.session_state.messages:
                             st.rerun()
                 with col3:
                     if st.button("📋 Copy", key=f"copy_{msg_id}"):
-                        st.session_state[f"show_copy_{msg_id}"] = not st.session_state.get(f"show_copy_{msg_id}", False)
-                
-                if st.session_state.get(f"show_copy_{msg_id}", False):
-                    st.code(content, language="markdown")
+                        import subprocess
+                        try:
+                            subprocess.run("pbcopy", text=True, input=content)
+                            st.toast("✅ Copied to clipboard!")
+                        except Exception as e:
+                            st.error(f"Failed to copy: {e}")
 
 # --- Get Input from either Chat or Sidebar Check-In ---
 user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")
