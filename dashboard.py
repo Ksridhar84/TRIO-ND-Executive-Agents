@@ -259,13 +259,21 @@ for msg in st.session_state.messages:
                 msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
                 
                 with col1:
-                    if st.button("👍 Good", key=f"up_{msg_id}"):
-                        store_memory(f"User Feedback: The user PREFERS this style of response: {content[:200]}...")
-                        st.toast("✅ Positive feedback stored in agent's memory!")
+                    if st.session_state.get(f"liked_{msg_id}"):
+                        st.button("💖 Thank you!", key=f"up_{msg_id}_done", type="primary", disabled=True)
+                    else:
+                        if st.button("👍 Good", key=f"up_{msg_id}"):
+                            st.session_state[f"liked_{msg_id}"] = True
+                            store_memory(f"User Feedback: The user PREFERS this style of response: {content[:200]}...")
+                            st.rerun()
                 with col2:
-                    if st.button("👎 Bad", key=f"down_{msg_id}"):
-                        store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
-                        st.toast("❌ Negative feedback stored in agent's memory!")
+                    if st.session_state.get(f"disliked_{msg_id}"):
+                        st.button("👎 Noted", key=f"down_{msg_id}_done", type="primary", disabled=True)
+                    else:
+                        if st.button("👎 Bad", key=f"down_{msg_id}"):
+                            st.session_state[f"disliked_{msg_id}"] = True
+                            store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
+                            st.rerun()
                 with col3:
                     if st.button("📋 Copy Text", key=f"copy_{msg_id}"):
                         st.session_state[f"show_copy_{msg_id}"] = not st.session_state.get(f"show_copy_{msg_id}", False)
@@ -372,13 +380,21 @@ if user_prompt:
             live_msg_id = st.session_state.messages[-1]["id"]
             
             with col1:
-                if st.button("👍 Good", key=f"up_{live_msg_id}"):
-                    store_memory(f"User Feedback: The user PREFERS this style of response: {cos_response[:200]}...")
-                    st.toast("✅ Positive feedback stored in agent's memory!")
+                if st.session_state.get(f"liked_{live_msg_id}"):
+                    st.button("💖 Thank you!", key=f"up_{live_msg_id}_done", type="primary", disabled=True)
+                else:
+                    if st.button("👍 Good", key=f"up_{live_msg_id}"):
+                        st.session_state[f"liked_{live_msg_id}"] = True
+                        store_memory(f"User Feedback: The user PREFERS this style of response: {cos_response[:200]}...")
+                        st.rerun()
             with col2:
-                if st.button("👎 Bad", key=f"down_{live_msg_id}"):
-                    store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
-                    st.toast("❌ Negative feedback stored in agent's memory!")
+                if st.session_state.get(f"disliked_{live_msg_id}"):
+                    st.button("👎 Noted", key=f"down_{live_msg_id}_done", type="primary", disabled=True)
+                else:
+                    if st.button("👎 Bad", key=f"down_{live_msg_id}"):
+                        st.session_state[f"disliked_{live_msg_id}"] = True
+                        store_memory(f"User Feedback: The user DISLIKES this style of response. AVOID doing this: {cos_response[:200]}...")
+                        st.rerun()
             with col3:
                 if st.button("📋 Copy Text", key=f"copy_{live_msg_id}"):
                     st.session_state[f"show_copy_{live_msg_id}"] = not st.session_state.get(f"show_copy_{live_msg_id}", False)
