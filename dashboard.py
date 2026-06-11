@@ -1,11 +1,20 @@
 import streamlit as st
 import os
 
-# Map Streamlit secrets to environment variables for cloud deployment
+# Map Streamlit secrets recursively and case-insensitively to environment variables
 try:
-    if hasattr(st, "secrets"):
-        for key in st.secrets:
-            os.environ[key] = str(st.secrets[key])
+    if hasattr(st, "secrets") and st.secrets:
+        def map_dict(d, prefix=""):
+            for k, v in d.items():
+                if isinstance(v, dict) or (hasattr(v, "items") and callable(getattr(v, "items"))):
+                    map_dict(v, prefix + k.upper() + "_")
+                else:
+                    val_str = str(v)
+                    os.environ[k] = val_str
+                    os.environ[k.upper()] = val_str
+                    if prefix:
+                        os.environ[prefix + k.upper()] = val_str
+        map_dict(st.secrets)
 except Exception:
     pass
 
@@ -187,6 +196,24 @@ with st.sidebar:
         avatar_placeholder.markdown(f'<img src="data:image/png;base64,{avatar_b64}" class="avatar-idle">', unsafe_allow_html=True)
         
     st.header("📎 Multi-Modal Hub")
+    
+    # Secrets Diagnostics Expander (collapsible, low-sensory clutter)
+    try:
+        if hasattr(st, "secrets") and st.secrets:
+            loaded_keys = [f"`{k}`" for k in st.secrets.keys()]
+            if loaded_keys:
+                with st.expander("🔑 Secrets Diagnostics (Debug)"):
+                    st.write("Loaded keys: " + ", ".join(loaded_keys))
+                    st.caption("All keys mapped to system environment variables.")
+            else:
+                with st.expander("🔑 Secrets Diagnostics (Debug)"):
+                    st.warning("No keys found in Streamlit Secrets!")
+        else:
+            with st.expander("🔑 Secrets Diagnostics (Debug)"):
+                st.warning("st.secrets is empty or unavailable.")
+    except Exception as e:
+        pass
+
     st.markdown("Upload files, hand-written notes, or record a voice memo. They will be passed to your agents on your next chat message!")
     
     uploaded_file = st.file_uploader("Upload Image, Document, or Video")
