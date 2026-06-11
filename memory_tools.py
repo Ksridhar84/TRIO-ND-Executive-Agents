@@ -20,11 +20,35 @@ def _get_db():
 def get_embedding(text: str) -> list[float]:
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
     genai_client = client.Client(api_key=api_key)
-    response = genai_client.models.embed_content(
-        model='text-embedding-004',
-        contents=text,
-    )
-    return response.embeddings[0].values
+    
+    try:
+        response = genai_client.models.embed_content(
+            model='text-embedding-004',
+            contents=text,
+        )
+        return response.embeddings[0].values
+    except Exception as e1:
+        if "404" in str(e1):
+            try:
+                # Fallback 1: Try with 'models/' prefix
+                response = genai_client.models.embed_content(
+                    model='models/text-embedding-004',
+                    contents=text,
+                )
+                return response.embeddings[0].values
+            except Exception as e2:
+                if "404" in str(e2):
+                    # Fallback 2: Try v1beta API version
+                    beta_client = client.Client(api_key=api_key, http_options={'api_version': 'v1beta'})
+                    response = beta_client.models.embed_content(
+                        model='text-embedding-004',
+                        contents=text,
+                    )
+                    return response.embeddings[0].values
+                else:
+                    raise e2
+        else:
+            raise e1
 
 def cosine_similarity(v1, v2):
     dot = sum(a*b for a, b in zip(v1, v2))
@@ -42,16 +66,19 @@ def store_memory(topic: str, details: str) -> str:
     Returns:
         str: Confirmation message.
     """
-    conn = _get_db()
-    cursor = conn.cursor()
-    # Combine for embedding context
-    embedding = get_embedding(f"Topic: {topic}. Details: {details}")
-    cursor.execute("INSERT INTO memories (topic, details, embedding) VALUES (?, ?, ?)", 
-                   (topic, details, json.dumps(embedding)))
-    conn.commit()
-    conn.close()
-    
-    return f"Successfully stored memory under topic: '{topic}'"
+    try:
+        conn = _get_db()
+        cursor = conn.cursor()
+        # Combine for embedding context
+        embedding = get_embedding(f"Topic: {topic}. Details: {details}")
+        cursor.execute("INSERT INTO memories (topic, details, embedding) VALUES (?, ?, ?)", 
+                       (topic, details, json.dumps(embedding)))
+        conn.commit()
+        conn.close()
+        
+        return f"Successfully stored memory under topic: '{topic}'"
+    except Exception as e:
+        return f"Error storing memory: {e}"
 
 def search_memory(query: str, n_results: int = 3) -> str:
     """Search the persistent long-term vector memory bank for past context, preferences, or project details.
