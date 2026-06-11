@@ -301,13 +301,14 @@ for msg in st.session_state.messages:
                             store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
                             st.rerun()
                 with col3:
-                    if st.button("📋 Copy", key=f"copy_{msg_id}"):
-                        import subprocess
-                        try:
-                            subprocess.run("pbcopy", text=True, input=content)
-                            st.toast("✅ Copied to clipboard!")
-                        except Exception as e:
-                            st.error(f"Failed to copy: {e}")
+                    from st_copy_to_clipboard import st_copy_to_clipboard
+                    st_copy_to_clipboard(
+                        text=content,
+                        before_copy_label="📋 Copy",
+                        after_copy_label="✅ Copied!",
+                        show_text=False,
+                        key=f"copy_{msg_id}"
+                    )
 
 # --- Get Input from either Chat or Sidebar Check-In ---
 user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")
