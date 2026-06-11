@@ -196,24 +196,6 @@ with st.sidebar:
         avatar_placeholder.markdown(f'<img src="data:image/png;base64,{avatar_b64}" class="avatar-idle">', unsafe_allow_html=True)
         
     st.header("📎 Multi-Modal Hub")
-    
-    # Secrets Diagnostics Expander (collapsible, low-sensory clutter)
-    try:
-        if hasattr(st, "secrets") and st.secrets:
-            loaded_keys = [f"`{k}`" for k in st.secrets.keys()]
-            if loaded_keys:
-                with st.expander("🔑 Secrets Diagnostics (Debug)"):
-                    st.write("Loaded keys: " + ", ".join(loaded_keys))
-                    st.caption("All keys mapped to system environment variables.")
-            else:
-                with st.expander("🔑 Secrets Diagnostics (Debug)"):
-                    st.warning("No keys found in Streamlit Secrets!")
-        else:
-            with st.expander("🔑 Secrets Diagnostics (Debug)"):
-                st.warning("st.secrets is empty or unavailable.")
-    except Exception as e:
-        pass
-
     st.markdown("Upload files, hand-written notes, or record a voice memo. They will be passed to your agents on your next chat message!")
     
     uploaded_file = st.file_uploader("Upload Image, Document, or Video")
