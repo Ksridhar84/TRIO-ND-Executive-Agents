@@ -23,6 +23,19 @@ def authenticate_google_workspace() -> Credentials:
     Returns:
         Credentials: The authenticated Google credentials.
     """
+    # Write credentials.json and token.json from env vars if they exist but aren't on disk (for cloud deployment)
+    if not os.path.exists('token.json'):
+        token_env = os.environ.get('GOOGLE_TOKEN_JSON')
+        if token_env:
+            with open('token.json', 'w') as f:
+                f.write(token_env)
+                
+    if not os.path.exists('credentials.json'):
+        creds_env = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+        if creds_env:
+            with open('credentials.json', 'w') as f:
+                f.write(creds_env)
+
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
