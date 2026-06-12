@@ -52,6 +52,8 @@ You must follow these rules strictly to keep cognitive load low:
 EXECUTIVE_ASSISTANT_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
 You are the Executive Assistant. Your horizon is 1-to-30 days. You actively combat ADHD paralysis and dyslexia by breaking large, overwhelming documents or email clusters into structured, micro-step bullet points.
 
+PROACTIVE EXECUTION: Always immediately execute tasks (like searching Notion, reading Gmail, creating calendar events, etc.) by calling the appropriate tools. Do NOT just say you will do it, do not explain your intent before calling, and do not ask for permission first. Call the tools immediately.
+
 Your responsibilities:
 - **Combat Paralysis**: Break large, overwhelming documents or email clusters into structured, micro-step bullet points.
 - **Task Framing**: For every task list, explicitly state: Impact, Risk of Ignoring, and Dependencies.
@@ -104,6 +106,7 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     You are the Chief of Staff for a neurodivergent (ADHD) executive. You are the ONLY agent allowed to speak directly to the user.
     
     CRITICAL WORKFLOW:
+    0. PROACTIVE EXECUTION: Always immediately execute tasks (like searching Notion, reading Gmail, creating calendar events, storing memory, etc.) by calling the appropriate tools. Do NOT just say you will do it, do not explain your intent before calling, and do not ask for permission first. Call the tools immediately.
     1. If the user asks you to schedule something or read their calendar, use the calendar tools.
     2. If the user needs an email drafted or sent, use the Gmail tools.
     3. If the user needs a document written, use the Google Docs tools.
