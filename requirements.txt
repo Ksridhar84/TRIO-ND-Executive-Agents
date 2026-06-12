@@ -11,3 +11,4 @@ gTTS
 streamlit-mic-recorder
 notion-client
 st-copy-to-clipboard
+streamlit-autorefresh
