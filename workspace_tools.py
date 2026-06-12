@@ -371,6 +371,13 @@ def create_google_doc(title: str, text_content: str) -> dict:
     except Exception as e:
         return {"error": f"Failed to create Google Doc: {str(e)}"}
 
+def decode_gmail_base64(data: str) -> bytes:
+    # Add base64 padding if missing
+    missing_padding = len(data) % 4
+    if missing_padding:
+        data += '=' * (4 - missing_padding)
+    return base64.urlsafe_b64decode(data)
+
 def get_gmail_message_details(message_id: str) -> dict:
     """Retrieve the full body and metadata of a specific Gmail email, along with any attachment details.
     
@@ -435,9 +442,9 @@ def get_gmail_message_details(message_id: str) -> dict:
                     })
                 # Check for body text
                 elif mime_type == 'text/plain' and 'data' in body_data:
-                    body += base64.urlsafe_b64decode(body_data['data']).decode('utf-8', errors='ignore')
+                    body += decode_gmail_base64(body_data['data']).decode('utf-8', errors='ignore')
                 elif mime_type == 'text/html' and 'data' in body_data and not body:
-                    html_content = base64.urlsafe_b64decode(body_data['data']).decode('utf-8', errors='ignore')
+                    html_content = decode_gmail_base64(body_data['data']).decode('utf-8', errors='ignore')
                     import re
                     body += re.sub('<[^<]+?>', '', html_content)
                 elif 'parts' in part:
@@ -448,7 +455,7 @@ def get_gmail_message_details(message_id: str) -> dict:
         else:
             body_data = payload.get('body', {})
             if 'data' in body_data:
-                body = base64.urlsafe_b64decode(body_data['data']).decode('utf-8', errors='ignore')
+                body = decode_gmail_base64(body_data['data']).decode('utf-8', errors='ignore')
                 
         return {
             "id": message_id,
@@ -495,7 +502,7 @@ def read_gmail_attachment(message_id: str, attachment_id: str, filename: str) ->
         if not data:
             return "Error: Attachment contains no data."
             
-        file_bytes = base64.urlsafe_b64decode(data)
+        file_bytes = decode_gmail_base64(data)
         ext = filename.lower().split('.')[-1]
         
         if ext in ['txt', 'csv', 'tsv', 'json', 'md', 'xml', 'yaml', 'yml']:

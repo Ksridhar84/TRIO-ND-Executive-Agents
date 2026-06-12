@@ -1,5 +1,20 @@
 import random
 import datetime
+import os
+import zoneinfo
+
+def get_localized_now() -> datetime.datetime:
+    """Get the current datetime adjusted to the user's localized timezone from environment variables.
+    
+    Returns:
+        datetime.datetime: Current localized datetime.
+    """
+    tz_str = os.environ.get("USER_TIMEZONE", "America/New_York")
+    try:
+        tz = zoneinfo.ZoneInfo(tz_str)
+        return datetime.datetime.now(tz)
+    except Exception:
+        return datetime.datetime.now()
 
 def get_current_datetime() -> str:
     """Get the current date, time, and day of the week.
@@ -7,7 +22,7 @@ def get_current_datetime() -> str:
     Returns:
         str: Formatted current datetime string.
     """
-    now = datetime.datetime.now()
+    now = get_localized_now()
     return now.strftime("Today is %A, %B %d, %Y at %I:%M %p")
 
 def check_emails() -> list[dict]:

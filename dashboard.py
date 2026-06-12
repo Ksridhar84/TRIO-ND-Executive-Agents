@@ -32,6 +32,7 @@ from voice_tools import generate_agent_voice
 from streamlit_mic_recorder import mic_recorder
 from chat_tools import save_chat_history, load_chat_history, list_chat_histories
 from memory_tools import store_memory
+from tools import get_localized_now
 from streamlit_autorefresh import st_autorefresh
 from reminder_tools import (
     create_reminder,
@@ -58,7 +59,7 @@ async def get_agent_response(prompt_text, file_bytes=None, mime_type=None):
     parts = []
     if prompt_text:
         # Inject current time as hidden context so the agent never hallucinates the date
-        current_time_str = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+        current_time_str = get_localized_now().strftime("%A, %B %d, %Y at %I:%M %p")
         hidden_context = f"[System Info: The current date and time is {current_time_str}]\n\n{prompt_text}"
         parts.append(types.Part.from_text(text=hidden_context))
     if file_bytes and mime_type:
