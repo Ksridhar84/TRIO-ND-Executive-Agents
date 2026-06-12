@@ -21,7 +21,9 @@ from workspace_tools import (
     read_google_slide,
     send_email,
     create_calendar_event,
-    create_google_doc
+    create_google_doc,
+    get_gmail_message_details,
+    read_gmail_attachment
 )
 from mcp_config import gitlab_mcp_client
 
@@ -80,7 +82,9 @@ ea_agent = Agent(
         create_google_doc,
         search_notion,
         read_notion_page,
-        create_notion_page
+        create_notion_page,
+        get_gmail_message_details,
+        read_gmail_attachment
     ] + gitlab_tools,
 )
 
@@ -154,7 +158,9 @@ chief_of_staff = Agent(
         create_reminder,
         list_reminders,
         delete_reminder,
-        toggle_reminder
+        toggle_reminder,
+        get_gmail_message_details,
+        read_gmail_attachment
     ],
 )
 # Compatibility aliases
