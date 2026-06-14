@@ -489,14 +489,81 @@ for msg in st.session_state.messages:
                             store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
                             st.rerun()
                 with col3:
-                    from st_copy_to_clipboard import st_copy_to_clipboard
-                    st_copy_to_clipboard(
-                        text=content,
-                        before_copy_label="📋 Copy",
-                        after_copy_label="✅ Copied!",
-                        show_text=False,
-                        key=f"copy_{msg_id}"
-                    )
+                    import base64
+                    b64_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+                    copy_html = f"""
+                    <html style="margin:0; padding:0; overflow:hidden;">
+                    <head>
+                    <style>
+                    body {{
+                        margin: 0;
+                        padding: 0;
+                        background-color: transparent;
+                        overflow: hidden;
+                    }}
+                    button {{
+                        background-color: #1e1e1e;
+                        color: #e0e0e0;
+                        border: 1px solid #3a3a3a;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        width: 100%;
+                        height: 30px;
+                        box-sizing: border-box;
+                        justify-content: center;
+                        transition: background-color 0.1s, border-color 0.1s;
+                    }}
+                    button:hover {{
+                        background-color: #2a2a2a;
+                        border-color: #5a5a5a;
+                    }}
+                    button:active {{
+                        background-color: #333333;
+                    }}
+                    </style>
+                    </head>
+                    <body>
+                    <button id="copy-btn" onclick="copy()">📋 Copy</button>
+                    <script>
+                    function copy() {{
+                        const text = atob("{b64_content}");
+                        navigator.clipboard.writeText(text).then(() => {{
+                            const btn = document.getElementById("copy-btn");
+                            btn.innerHTML = "✅ Copied!";
+                            setTimeout(() => {{
+                                btn.innerHTML = "📋 Copy";
+                            }}, 2000);
+                        }}).catch(err => {{
+                            const textArea = document.createElement("textarea");
+                            textArea.value = text;
+                            textArea.style.position = "fixed";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            try {{
+                                document.execCommand("copy");
+                                const btn = document.getElementById("copy-btn");
+                                btn.innerHTML = "✅ Copied!";
+                                setTimeout(() => {{
+                                    btn.innerHTML = "📋 Copy";
+                                }}, 2000);
+                            }} catch (e) {{
+                                console.error("Fallback copy failed", e);
+                            }}
+                            document.body.removeChild(textArea);
+                        }});
+                    }}
+                    </script>
+                    </body>
+                    </html>
+                    """
+                    st.components.v1.html(copy_html, height=35)
 
 # --- Get Input from either Chat or Sidebar Check-In ---
 user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")

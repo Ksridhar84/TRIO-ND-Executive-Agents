@@ -315,7 +315,7 @@ async def run_agent_and_update_history(session_id: str, user_prompt: str, user_e
     full_response = []
     try:
         async for event in runner.run_async(user_id="background_scheduler", session_id=session_run_id, new_message=message_content):
-            if event.author == "ChiefOfStaff" and event.content and event.content.parts:
+            if event.author and event.content and event.content.parts:
                 for part in event.content.parts:
                     if part.text:
                         full_response.append(part.text)
