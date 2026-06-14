@@ -8,7 +8,7 @@ from google.adk.runners import InMemoryRunner
 from google.genai import types
 from datetime import datetime
 from agents import chief_of_staff
-from workspace_tools import read_gmail_inbox, send_email, search_gmail_messages
+from workspace_tools import read_gmail_inbox, send_email, search_gmail_messages, get_gmail_message_details
 from reminder_tools import get_db_connection, insert_pending_voice_alert
 
 load_dotenv()

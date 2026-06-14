@@ -40,13 +40,34 @@ def ensure_gitlab_tools():
     if gitlab_mcp_client:
         try:
             print("Lazy-loading GitLab MCP tools...")
-            gitlab_tools = asyncio.run(gitlab_mcp_client.get_tools())
-            for tool in gitlab_tools:
-                if tool not in ea_agent.tools:
-                    ea_agent.tools.append(tool)
-                if tool not in chief_of_staff.tools:
-                    chief_of_staff.tools.append(tool)
-            _gitlab_tools_loaded = True
+            import threading
+            result = []
+            exc = []
+            
+            def target():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    result.append(loop.run_until_complete(gitlab_mcp_client.get_tools()))
+                    loop.close()
+                except Exception as e:
+                    exc.append(e)
+            
+            thread = threading.Thread(target=target)
+            thread.start()
+            thread.join()
+            
+            if exc:
+                raise exc[0]
+                
+            if result:
+                gitlab_tools = result[0]
+                for tool in gitlab_tools:
+                    if tool not in ea_agent.tools:
+                        ea_agent.tools.append(tool)
+                    if tool not in chief_of_staff.tools:
+                        chief_of_staff.tools.append(tool)
+                _gitlab_tools_loaded = True
         except Exception as e:
             print(f"WARNING: Could not fetch GitLab tools: {e}")
     return gitlab_tools

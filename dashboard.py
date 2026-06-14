@@ -201,7 +201,11 @@ avatar_b64 = load_image_b64("assets/cos_avatar.png")
 if "voice_bytes" not in st.session_state:
     st.session_state.voice_bytes = None
 if "session_id" not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
+    histories = list_chat_histories()
+    if histories:
+        st.session_state.session_id = histories[0][0]
+    else:
+        st.session_state.session_id = str(uuid.uuid4())
 
 # --- Auto-Refresh & Alerts Checker ---
 # Trigger page refresh every 10 seconds to scan for background alerts
