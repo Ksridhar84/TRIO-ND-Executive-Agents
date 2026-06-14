@@ -207,7 +207,23 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
         create_message = {'raw': encoded_message}
 
         send_message = service.users().messages().send(userId="me", body=create_message).execute()
-        return {"status": "success", "message_id": send_message['id']}
+        msg_id = send_message['id']
+        
+        try:
+            import json
+            processed_file = "processed_commands.json"
+            processed_ids = []
+            if os.path.exists(processed_file):
+                with open(processed_file, "r") as f:
+                    processed_ids = json.load(f)
+            if msg_id not in processed_ids:
+                processed_ids.append(msg_id)
+                with open(processed_file, "w") as f:
+                    json.dump(processed_ids, f)
+        except Exception as e:
+            print(f"Warning: Failed to save sent message ID to processed_commands.json: {e}")
+
+        return {"status": "success", "message_id": msg_id}
     except Exception as e:
         return {"error": f"Failed to send email: {str(e)}"}
 
