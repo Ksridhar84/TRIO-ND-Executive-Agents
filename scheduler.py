@@ -186,60 +186,42 @@ def run_test_job():
     prompt = "This is a test of the automated background scheduler. Please send me a quick email confirming that your background automated system is online and functioning."
     asyncio.run(run_automated_report(prompt))
 
-def load_processed_emails():
-    if os.path.exists("processed_emails.json"):
-        try:
-            with open("processed_emails.json", "r") as f:
-                return set(json.load(f))
-        except:
-            return set()
-    return set()
+def job_morning_pattern_check():
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Running daily Morning Email Pattern & Insight Check...")
+    prompt = """
+    Good morning! Run a daily pattern analysis on my email communications.
+    Specifically:
+    1. Read the latest emails using `read_gmail_inbox`.
+    2. Search and retrieve recent emails sent by you or me (using `search_gmail_messages` with query 'label:SENT' or 'from:me') to review past communication context.
+    3. FILTER NOISE: Learn to discern important/actionable emails (e.g., client requests, updates, direct questions) from newsletters or noise (spam, subscriptions, logs). Newsletters and noise MUST be completely ignored.
+    4. NO HALLUCINATIONS: Do NOT fabricate or invent connections or patterns. Base everything strictly on actual email details. If there are no new significant patterns, connections, or strategic insights, do NOT generate a report and do NOT send an email (state 'No significant new patterns found.').
+    5. PROVIDE REASONING: For any connections, patterns, or insights identified, provide clear reasoning explaining why you came to that conclusion, citing specific emails (sender, subject, date).
+    6. If and only if you find significant new insights or patterns, send me an email using the `send_email` tool with the subject 'Executive Pattern Analysis: New Strategic Insights' detailing the patterns, insights, and reasoning.
+    """
+    asyncio.run(run_automated_report(prompt))
 
-def save_processed_emails(processed_ids):
-    with open("processed_emails.json", "w") as f:
-        json.dump(list(processed_ids), f)
-
-def job_hourly_inbox_check():
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Polling inbox for new unread emails...")
-    emails = read_gmail_inbox(max_results=10)
-    
-    if not emails or "status" in emails[0] or "error" in emails[0]:
-        print("No new emails found.")
-        return
-        
-    processed_ids = load_processed_emails()
-    new_emails = []
-    
-    for email in emails:
-        if email.get("id") and email["id"] not in processed_ids:
-            new_emails.append(email)
-            processed_ids.add(email["id"])
-            
-    if not new_emails:
-        print("All unread emails have already been processed.")
-        return
-        
-    # Save the updated memory bank
-    save_processed_emails(processed_ids)
-    
-    print(f"Found {len(new_emails)} new emails! Waking up CoS to process them...")
-    
-    # Construct the prompt for the agent
-    prompt = f"Background Alert: I have received {len(new_emails)} new emails in my inbox:\\n\\n"
-    for em in new_emails:
-        prompt += f"- From: {em['sender']}\\n  Subject: {em['subject']}\\n  Snippet: {em['snippet']}\\n\\n"
-        
-    prompt += "Activate your Pattern Recognition Engine. Analyze these new emails alongside your memory of past emails. Do not just summarize them one-by-one. Connect the dots: Are there any emerging patterns, duplicate requests, overlapping projects, or systemic trends the user should know about? If you find a useful connection or urgent systemic issue, send me an email with your dot-connecting insights."
-    
+def job_evening_pattern_check():
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Running daily Evening Email Pattern & Insight Check...")
+    prompt = """
+    Good evening! Run an end-of-day pattern analysis on my email communications.
+    Specifically:
+    1. Read the latest emails using `read_gmail_inbox`.
+    2. Search and retrieve emails sent today (using `search_gmail_messages` with query 'label:SENT' or 'from:me') to review past communication context.
+    3. FILTER NOISE: Learn to discern important/actionable emails from newsletters or noise. Newsletters and noise MUST be completely ignored.
+    4. NO HALLUCINATIONS: Do NOT fabricate or invent connections or patterns. Base everything strictly on actual email details. If there are no new significant patterns, connections, or strategic insights, do NOT generate a report and do NOT send an email.
+    5. PROVIDE REASONING: For any connections, patterns, or insights identified, provide clear reasoning explaining why you came to that conclusion, citing specific emails (sender, subject, date).
+    6. If and only if you find significant new insights or patterns, send me an email using the `send_email` tool with the subject 'Evening Pattern Analysis: New Strategic Insights' detailing the patterns, insights, and reasoning.
+    """
     asyncio.run(run_automated_report(prompt))
 
 if __name__ == "__main__":
     print("Starting Autonomous Executive OS Scheduler...")
     
     # Pre-programmed triggers
+    schedule.every().day.at("08:00").do(job_morning_pattern_check)
     schedule.every().day.at("08:30").do(job_morning_briefing)
     schedule.every().day.at("18:00").do(job_evening_wind_down)
-    schedule.every(1).hours.do(job_hourly_inbox_check)
+    schedule.every().day.at("18:00").do(job_evening_pattern_check)
     schedule.every(1).minutes.do(check_and_trigger_reminders)
     
     # Run dynamic reminder check on startup
@@ -250,11 +232,11 @@ if __name__ == "__main__":
     print("Running initial startup test job...")
     run_test_job()
     
-    print("Running immediate initial inbox check...")
-    job_hourly_inbox_check()
+    print("Running immediate initial email patterns check...")
+    job_morning_pattern_check()
     
     print("\nScheduler is now running in the background.")
-    print("It will automatically trigger at 8:00 AM and 6:00 PM every day.")
+    print("It will automatically trigger daily checks.")
     print("Press Ctrl+C to exit.")
     
     while True:

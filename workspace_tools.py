@@ -117,6 +117,65 @@ def read_gmail_inbox(max_results: int = 50) -> list[dict]:
     except Exception as e:
         return [{"error": f"Failed to fetch emails: {str(e)}"}]
 
+def search_gmail_messages(query: str = '', max_results: int = 20) -> list[dict]:
+    """Search the user's Gmail messages using standard Gmail search operators.
+    
+    Args:
+        query (str): The Gmail search query (e.g. 'label:SENT', 'from:me', 'subject:Briefing').
+        max_results (int): The maximum number of messages to retrieve. Default is 20.
+        
+    Returns:
+        list[dict]: A list of emails matching the query with id, sender, subject, date, and snippet.
+    """
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
+        return [
+            {
+                "id": "mock_search_1",
+                "sender": "me",
+                "subject": "👔 Gentle check-in from your Chief of Staff",
+                "date": "2026-06-12",
+                "snippet": "Hey there! Just a gentle check-in to help you stay present. Remember your reminder..."
+            }
+        ]
+    try:
+        creds = authenticate_google_workspace()
+        service = build('gmail', 'v1', credentials=creds)
+
+        results = service.users().messages().list(userId='me', q=query, maxResults=max_results).execute()
+        messages = results.get('messages', [])
+
+        if not messages:
+            return [{"status": f"No messages matching the query '{query}' were found."}]
+
+        email_data = []
+        for message in messages:
+            msg = service.users().messages().get(userId='me', id=message['id'], format='metadata', metadataHeaders=['Subject', 'From', 'Date']).execute()
+            headers = msg.get('payload', {}).get('headers', [])
+            
+            subject = "No Subject"
+            sender = "Unknown Sender"
+            date = "Unknown Date"
+            
+            for header in headers:
+                if header['name'] == 'Subject':
+                    subject = header['value']
+                if header['name'] == 'From':
+                    sender = header['value']
+                if header['name'] == 'Date':
+                    date = header['value']
+                    
+            email_data.append({
+                "id": message['id'],
+                "sender": sender,
+                "subject": subject,
+                "date": date,
+                "snippet": msg.get('snippet', '')
+            })
+            
+        return email_data
+    except Exception as e:
+        return [{"error": f"Failed to search emails: {str(e)}"}]
+
 def send_email(to_email: str, subject: str, body: str) -> dict:
     """Send an email from the user's Gmail account.
     

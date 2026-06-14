@@ -23,7 +23,8 @@ from workspace_tools import (
     create_calendar_event,
     create_google_doc,
     get_gmail_message_details,
-    read_gmail_attachment
+    read_gmail_attachment,
+    search_gmail_messages
 )
 from mcp_config import gitlab_mcp_client
 
@@ -89,7 +90,8 @@ ea_agent = Agent(
         read_notion_page,
         create_notion_page,
         get_gmail_message_details,
-        read_gmail_attachment
+        read_gmail_attachment,
+        search_gmail_messages
     ] + gitlab_tools,
 )
 
@@ -125,7 +127,12 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     6. **PARTNER TASK DELEGATION**: The user shares a Notion page called "Household Quests" with their partner. When the user asks "what do I need to do today" or logs in, ALWAYS delegate to the EA to search Notion for "Household Quests" and include any chores listed there into the daily summary.
     7. If the user submits a Daily Check-In, rely on the Coach's advice and ALWAYS use the `recommend_spotify_playlist` tool. 
     8. **DIRECT AGENT ROUTING**: If the user explicitly addresses a sub-agent by typing `@coach` or `@ea` in their prompt, you MUST immediately delegate the entire prompt verbatim to that specific agent and return their response exactly as they provided it. Do not answer it yourself.
-    9. **PATTERN RECOGNITION ENGINE**: The user's ADHD brain is excellent at pattern recognition but gets fatigued reading raw data. When asked to "run a pattern analysis", "cross-reference emails", or "analyze my inbox", you MUST directly use `read_gmail_inbox` to ingest a large batch of emails. DO NOT simply summarize them one by one. You must cross-reference them to find hidden connections, overlapping projects, repeated systemic requests, or systemic trends, and deliver a "dot-connecting" insight report.
+    9. **PATTERN RECOGNITION ENGINE**: The user's ADHD brain is excellent at pattern recognition but gets fatigued reading raw data. When asked to "run a pattern analysis", "cross-reference emails", or "analyze my inbox", you MUST analyze the user's communications to connect the dots:
+        - Use `read_gmail_inbox` to ingest the latest incoming emails.
+        - Use `search_gmail_messages` (with query 'label:SENT' or 'from:me') to retrieve and inspect recent emails and briefings sent by you or the user. Review these past communications so you can learn from past suggestions, patterns, and briefings.
+        - **FILTER NOISE**: Carefully discern between important/actionable emails (e.g. client requests, project status shifts, action items, critical updates) and newsletters, marketing material, automated logs, or noise. Ignore newsletters and noise completely.
+        - **NO HALLUCINATIONS**: Do NOT fabricate, invent, or hallucinate patterns or connections. Base all patterns strictly on real email details. If there are no significant new patterns, connections, or strategic insights, do NOT generate a report.
+        - **PROVIDE REASONING**: For any connection, pattern, or insight you identify, you MUST provide clear reasoning explaining why you came to that conclusion, citing specific emails (including sender, subject, and date).
     10. **THOUGHT LEADERSHIP ENGINE**: When the user asks you to draft LinkedIn posts, you MUST act as their personal brand manager. Do NOT make up generic content. Instead, use `get_calendar_events` and `read_gmail_inbox` to see what consulting work they actually did this week. Use `search_notion` and `read_notion_page` to read their "LinkedIn Strategy" page for brand pillars. Cross-reference their real-world work with their strategy to draft 3 highly engaging, insightful, and authentic LinkedIn posts.
     11. **REMINDERS ENGINE**: If the user asks to schedule, list, toggle, or delete a reminder (hourly, daily, weekly, monthly) using channels like email or voice, you MUST use the reminder tools (`create_reminder`, `list_reminders`, `toggle_reminder`, `delete_reminder`) to execute the request immediately.
     12. **EMAIL & ATTACHMENT ANALYSIS**: If the user asks to read, summarize, or retrieve findings from an email or its attachments:
@@ -171,7 +178,8 @@ chief_of_staff = Agent(
         delete_reminder,
         toggle_reminder,
         get_gmail_message_details,
-        read_gmail_attachment
+        read_gmail_attachment,
+        search_gmail_messages
     ],
 )
 # Compatibility aliases
