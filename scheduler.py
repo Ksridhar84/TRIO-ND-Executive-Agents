@@ -251,8 +251,14 @@ def job_check_user_commands():
         
         subject_lower = subject.lower().strip()
         is_reply = subject_lower.startswith("re:") or subject_lower.startswith("fwd:")
-        is_agent_subject = any(kw in subject_lower for kw in ["pattern analysis", "check-in", "briefing", "[test]", "reminder"])
-        is_direct_command = any(kw in snippet.lower() for kw in ["draft", "schedule", "remind"])
+        is_agent_subject = any(kw in subject_lower for kw in [
+            "pattern analysis", "check-in", "briefing", "[test]", "reminder", 
+            "insight", "report", "proposal", "plan", "alert", "status", "draft", "summary"
+        ])
+        is_direct_command = any(kw in snippet.lower() for kw in [
+            "draft", "schedule", "remind", "approve", "proceed", "yes", "confirm", 
+            "ok", "go ahead", "run", "execute", "done", "looks good", "perfect"
+        ])
         
         is_new_command = subject_lower.startswith("cos:") or subject_lower.startswith("agent:") or subject_lower.startswith("coach:")
         
