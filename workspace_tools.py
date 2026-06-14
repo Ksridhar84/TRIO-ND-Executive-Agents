@@ -202,6 +202,7 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
         message['To'] = to_email
         message['From'] = 'me'
         message['Subject'] = subject
+        message['X-Processed-By-Agent'] = 'true'
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         create_message = {'raw': encoded_message}
@@ -489,6 +490,7 @@ def get_gmail_message_details(message_id: str) -> dict:
         subject = "No Subject"
         sender = "Unknown Sender"
         date = "Unknown Date"
+        is_agent_sent = False
         for h in headers:
             if h['name'] == 'Subject':
                 subject = h['value']
@@ -496,6 +498,9 @@ def get_gmail_message_details(message_id: str) -> dict:
                 sender = h['value']
             elif h['name'] == 'Date':
                 date = h['value']
+            elif h['name'].lower() == 'x-processed-by-agent':
+                if h['value'].lower() == 'true':
+                    is_agent_sent = True
                 
         body = ""
         attachments = []
@@ -538,7 +543,8 @@ def get_gmail_message_details(message_id: str) -> dict:
             "subject": subject,
             "date": date,
             "body": body.strip(),
-            "attachments": attachments
+            "attachments": attachments,
+            "is_agent_sent": is_agent_sent
         }
     except Exception as e:
         return {"error": f"Failed to get email details: {str(e)}"}

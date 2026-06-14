@@ -263,10 +263,15 @@ def job_check_user_commands():
         is_new_command = subject_lower.startswith("cos:") or subject_lower.startswith("agent:") or subject_lower.startswith("coach:")
         
         if (is_reply and (is_agent_subject or is_direct_command)) or is_new_command:
-            print(f"Found new user instruction/reply: '{subject}'. Waking up CoS...")
-            
             # Retrieve full email body
             details = get_gmail_message_details(msg_id)
+            if details.get("is_agent_sent"):
+                print(f"Skipping email sent by agent (X-Processed-By-Agent): '{subject}'")
+                processed_ids.add(msg_id)
+                triggered = True
+                continue
+                
+            print(f"Found new user instruction/reply: '{subject}'. Waking up CoS...")
             body = details.get("body", snippet)
             
             # Find active chat session ID
@@ -348,8 +353,31 @@ async def run_agent_and_update_history(session_id: str, user_prompt: str, user_e
             details = get_gmail_message_details(user_email_msg_id)
             orig_subject = details.get("subject", "Agent Response")
             reply_subject = orig_subject if orig_subject.lower().startswith("re:") else f"Re: {orig_subject}"
-            print(f"Sending email reply: '{reply_subject}'...")
-            send_email(to_email="me", subject=reply_subject, body=agent_reply)
+            
+            # Reply to the actual sender, not "me"!
+            raw_sender = details.get("sender", "")
+            import re
+            match = re.search(r'<([^>]+)>', raw_sender)
+            reply_to = match.group(1).strip() if match else raw_sender.strip()
+            
+            # If the sender matches the authenticated agent email, route to 'me'
+            try:
+                from googleapiclient.discovery import build
+                from workspace_tools import authenticate_google_workspace
+                creds = authenticate_google_workspace()
+                service = build('gmail', 'v1', credentials=creds)
+                profile = service.users().getProfile(userId='me').execute()
+                auth_email = profile.get('emailAddress', '').lower()
+            except Exception as e:
+                auth_email = ""
+                
+            if not reply_to or reply_to.lower() == "unknown sender":
+                reply_to = "me"
+            elif auth_email and auth_email in reply_to.lower():
+                reply_to = "me"
+                
+            print(f"Sending email reply to {reply_to}: '{reply_subject}'...")
+            send_email(to_email=reply_to, subject=reply_subject, body=agent_reply)
         except Exception as ex:
             print(f"Failed to send email confirmation: {ex}")
 

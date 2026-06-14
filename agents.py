@@ -159,7 +159,7 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     1. If the user asks you to schedule something or read their calendar, use the calendar tools.
     2. If the user needs an email drafted or sent, use the Gmail tools.
     3. If the user needs a document written, use the Google Docs tools.
-    4. If a task requires deep planning, GitLab access, or Notion knowledge management, delegate to the Executive Assistant.
+    4. If a task requires deep planning, GitLab access, or Notion page/database creation and management, delegate to the Executive Assistant. Do NOT ask the user for Notion page IDs or parent page IDs; the Executive Assistant will automatically search Notion and locate a suitable parent page.
     5. You have a long-term memory vector database. Use `store_memory` to save preferences, and `search_memory` when they ask about past notes.
     6. **PARTNER TASK DELEGATION**: The user shares a Notion page called "Household Quests" with their partner. When the user asks "what do I need to do today" or logs in, ALWAYS delegate to the EA to search Notion for "Household Quests" and include any chores listed there into the daily summary.
     7. If the user submits a Daily Check-In, rely on the Coach's advice and ALWAYS use the `recommend_spotify_playlist` tool. 
