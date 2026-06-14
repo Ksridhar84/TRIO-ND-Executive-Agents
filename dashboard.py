@@ -473,19 +473,23 @@ for msg in st.session_state.messages:
                 msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
                 
                 with col1:
-                    if st.session_state.get(f"liked_{msg_id}"):
+                    if msg.get("liked") or st.session_state.get(f"liked_{msg_id}"):
                         st.button("💖 Saved!", key=f"up_{msg_id}_done", type="primary", disabled=True)
                     else:
                         if st.button("👍", key=f"up_{msg_id}"):
+                            msg["liked"] = True
                             st.session_state[f"liked_{msg_id}"] = True
+                            save_chat_history(st.session_state.session_id, st.session_state.messages)
                             store_memory("Agent Feedback", f"The user PREFERS this style of response: {content[:200]}...")
                             st.rerun()
                 with col2:
-                    if st.session_state.get(f"disliked_{msg_id}"):
+                    if msg.get("disliked") or st.session_state.get(f"disliked_{msg_id}"):
                         st.button("😢 Feedback Saved", key=f"down_{msg_id}_done", type="primary", disabled=True)
                     else:
                         if st.button("👎", key=f"down_{msg_id}"):
+                            msg["disliked"] = True
                             st.session_state[f"disliked_{msg_id}"] = True
+                            save_chat_history(st.session_state.session_id, st.session_state.messages)
                             store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
                             st.rerun()
                 with col3:

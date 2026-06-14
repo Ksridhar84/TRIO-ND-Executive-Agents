@@ -17,9 +17,18 @@ def save_chat_history(session_id: str, messages: list):
     # Filter out binary data like audio_bytes or file_bytes to save space
     clean_messages = []
     for msg in messages:
-        clean_msg = {"role": msg["role"], "content": msg["content"], "avatar": msg.get("avatar")}
+        clean_msg = {
+            "role": msg["role"],
+            "content": msg["content"],
+            "avatar": msg.get("avatar"),
+            "id": msg.get("id")
+        }
         if msg.get("has_file"):
             clean_msg["has_file"] = True
+        if msg.get("liked"):
+            clean_msg["liked"] = True
+        if msg.get("disliked"):
+            clean_msg["disliked"] = True
         clean_messages.append(clean_msg)
         
     with open(file_path, "w", encoding="utf-8") as f:
