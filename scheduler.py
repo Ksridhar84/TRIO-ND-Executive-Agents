@@ -214,6 +214,73 @@ def job_evening_pattern_check():
     """
     asyncio.run(run_automated_report(prompt))
 
+def load_processed_commands():
+    if os.path.exists("processed_commands.json"):
+        try:
+            with open("processed_commands.json", "r") as f:
+                return set(json.load(f))
+        except:
+            return set()
+    return set()
+
+def save_processed_commands(processed_ids):
+    with open("processed_commands.json", "w") as f:
+        json.dump(list(processed_ids), f)
+
+def job_check_user_commands():
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Checking inbox for direct user commands or replies...")
+    emails = read_gmail_inbox(max_results=5)
+    if not emails or "status" in emails[0] or "error" in emails[0]:
+        print("No new emails or error fetching inbox.")
+        return
+        
+    processed_ids = load_processed_commands()
+    triggered = False
+    
+    for em in emails:
+        msg_id = em.get("id")
+        if not msg_id or msg_id in processed_ids:
+            continue
+            
+        subject = em.get("subject", "")
+        sender = em.get("sender", "")
+        snippet = em.get("snippet", "")
+        
+        is_reply = subject.lower().startswith("re:") or subject.lower().startswith("fwd:")
+        is_agent_subject = any(kw in subject.lower() for kw in ["pattern analysis", "check-in", "briefing", "[test]"])
+        is_direct_command = any(kw in snippet.lower() for kw in ["draft", "schedule", "remind"])
+        
+        if is_reply and (is_agent_subject or is_direct_command):
+            print(f"Found new user instruction/reply: '{subject}'. Waking up CoS...")
+            
+            # Retrieve full email body
+            details = get_gmail_message_details(msg_id)
+            body = details.get("body", snippet)
+            
+            prompt = f"""
+            Direct User Command via Email Reply:
+            Subject: {subject}
+            Sender: {sender}
+            Body of reply: {body}
+            
+            Instructions:
+            1. The user has replied to one of your automated emails or checks.
+            2. Read the body of their reply. If they are asking you to perform a task (e.g., draft a response to a specific email, schedule something, update a reminder, etc.), you MUST execute it immediately using your tools.
+            3. If they are asking you to draft an email response:
+               - Search for the email they want you to respond to (using `read_gmail_inbox` or `search_gmail_messages`).
+               - Fetch details of that email (using `get_gmail_message_details`).
+               - Draft a professional, ADHD-friendly response.
+               - Send the draft to the user (using `send_email` with to_email='me' and subject starting with '[DRAFT REVIEW]') so the user can review it. Do NOT send the draft to the original sender, only send it to 'me' (the user) for review.
+            4. Once complete, send a confirmation email back to the user or reply in the thread confirming the action was taken.
+            """
+            
+            asyncio.run(run_automated_report(prompt))
+            processed_ids.add(msg_id)
+            triggered = True
+            
+    if triggered:
+        save_processed_commands(processed_ids)
+
 if __name__ == "__main__":
     print("Starting Autonomous Executive OS Scheduler...")
     
@@ -222,6 +289,7 @@ if __name__ == "__main__":
     schedule.every().day.at("08:30").do(job_morning_briefing)
     schedule.every().day.at("18:00").do(job_evening_wind_down)
     schedule.every().day.at("18:00").do(job_evening_pattern_check)
+    schedule.every(5).minutes.do(job_check_user_commands)
     schedule.every(1).minutes.do(check_and_trigger_reminders)
     
     # Run dynamic reminder check on startup
@@ -231,6 +299,9 @@ if __name__ == "__main__":
     # Run the test job immediately on startup to verify it works!
     print("Running initial startup test job...")
     run_test_job()
+    
+    print("Running immediate initial command check...")
+    job_check_user_commands()
     
     print("Running immediate initial email patterns check...")
     job_morning_pattern_check()

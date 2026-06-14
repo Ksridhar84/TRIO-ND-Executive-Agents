@@ -34,11 +34,20 @@ if not gitlab_token or not gitlab_project_id:
         "Proceeding without GitLab integration."
     )
 else:
-    # Configure the connection parameters using Stdio transport to run npx.
-    # We map GITLAB_PERSONAL_ACCESS_TOKEN as required by the official GitLab MCP server.
+    # Look for local installation to avoid npx update/network checks at startup
+    package_dir = os.path.dirname(os.path.abspath(__file__))
+    gitlab_bin_path = os.path.join(package_dir, "node_modules", "@modelcontextprotocol", "server-gitlab", "dist", "index.js")
+    
+    if os.path.exists(gitlab_bin_path):
+        command = "node"
+        args = [gitlab_bin_path]
+    else:
+        command = "npx"
+        args = ["-y", "@modelcontextprotocol/server-gitlab"]
+
     connection_params = StdioServerParameters(
-        command="npx",
-        args=["-y", "@modelcontextprotocol/server-gitlab"],
+        command=command,
+        args=args,
         env={
             **os.environ,
             "GITLAB_TOKEN": gitlab_token,
