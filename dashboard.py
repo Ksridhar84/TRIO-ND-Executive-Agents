@@ -52,6 +52,8 @@ if api_key:
 
 # Real Agent Backend Integration
 async def get_agent_response(prompt_text, file_bytes=None, mime_type=None):
+    from agents import ensure_gitlab_tools
+    ensure_gitlab_tools()
     runner = InMemoryRunner(agent=chief_of_staff)
     runner.auto_create_session = True
     session_id = f"streamlit_session_{int(time.time())}"
@@ -423,11 +425,15 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error loading reminders: {e}")
 
-# --- Initialize Conversation Session History ---
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?", "id": str(uuid.uuid4())[:8]}
-    ]
+# --- Initialize/Sync Conversation Session History ---
+disk_messages = load_chat_history(st.session_state.session_id)
+if disk_messages:
+    st.session_state.messages = disk_messages
+else:
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?", "id": str(uuid.uuid4())[:8]}
+        ]
 
 # Ensure all legacy messages have a permanent ID to prevent duplicate key errors on reruns
 for msg in st.session_state.messages:

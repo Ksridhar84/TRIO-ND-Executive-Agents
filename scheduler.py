@@ -147,6 +147,8 @@ def check_and_trigger_reminders():
         print(f"Error checking reminders: {e}")
 
 async def run_automated_report(prompt: str):
+    from agents import ensure_gitlab_tools
+    ensure_gitlab_tools()
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Waking up CoS Agent for scheduled task...")
     runner = InMemoryRunner(agent=chief_of_staff)
     runner.auto_create_session = True
@@ -257,29 +259,89 @@ def job_check_user_commands():
             details = get_gmail_message_details(msg_id)
             body = details.get("body", snippet)
             
-            prompt = f"""
-            Direct User Command via Email Reply:
-            Subject: {subject}
-            Sender: {sender}
-            Body of reply: {body}
+            # Find active chat session ID
+            from chat_tools import list_chat_histories
+            histories = list_chat_histories()
+            active_session_id = histories[0][0] if histories else "shared_session"
             
-            Instructions:
-            1. The user has replied to one of your automated emails or checks.
-            2. Read the body of their reply. If they are asking you to perform a task (e.g., draft a response to a specific email, schedule something, update a reminder, etc.), you MUST execute it immediately using your tools.
-            3. If they are asking you to draft an email response:
-               - Search for the email they want you to respond to (using `read_gmail_inbox` or `search_gmail_messages`).
-               - Fetch details of that email (using `get_gmail_message_details`).
-               - Draft a professional, ADHD-friendly response.
-               - Send the draft to the user (using `send_email` with to_email='me' and subject starting with '[DRAFT REVIEW]') so the user can review it. Do NOT send the draft to the original sender, only send it to 'me' (the user) for review.
-            4. Once complete, send a confirmation email back to the user or reply in the thread confirming the action was taken.
-            """
-            
-            asyncio.run(run_automated_report(prompt))
+            asyncio.run(run_agent_and_update_history(active_session_id, body, msg_id))
             processed_ids.add(msg_id)
             triggered = True
             
     if triggered:
         save_processed_commands(processed_ids)
+
+async def run_agent_and_update_history(session_id: str, user_prompt: str, user_email_msg_id: str = None):
+    from agents import ensure_gitlab_tools
+    ensure_gitlab_tools()
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Waking up CoS Agent to respond to user session '{session_id}'...")
+    
+    from chat_tools import load_chat_history, save_chat_history
+    import uuid
+    
+    # 1. Load active chat history
+    messages = load_chat_history(session_id)
+    if not messages:
+        messages = [
+            {"role": "assistant", "avatar": "👔", "content": "I am your Chief of Staff. I have synthesized data from your Assistant and Coach. What strategic decision or tie-breaker do you need me to resolve right now?", "id": str(uuid.uuid4())[:8]}
+        ]
+        
+    # 2. Append the user message (from email)
+    messages.append({
+        "role": "user",
+        "avatar": "✉️",
+        "content": f"[Email Reply] {user_prompt}",
+        "id": str(uuid.uuid4())[:8]
+    })
+    save_chat_history(session_id, messages)
+    
+    # 3. Construct prompt with context history to maintain continuity
+    context_prompt = "Below is the history of the conversation so far for your reference:\n"
+    for msg in messages[:-1]:
+        context_prompt += f"- {msg['role']}: {msg['content']}\n"
+    
+    full_prompt = f"{context_prompt}\n\n[New Message via Email]: {user_prompt}\n\nPlease execute the command and draft your response. If you need to send an email or draft a response to an email, use the send_email tool. Make sure to reply back to the user via email if they asked you to."
+    
+    # 4. Run the agent
+    runner = InMemoryRunner(agent=chief_of_staff)
+    runner.auto_create_session = True
+    session_run_id = f"sched_session_{int(time.time())}"
+    message_content = types.Content(role="user", parts=[types.Part.from_text(text=full_prompt)])
+    
+    full_response = []
+    try:
+        async for event in runner.run_async(user_id="background_scheduler", session_id=session_run_id, new_message=message_content):
+            if event.author == "ChiefOfStaff" and event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                        full_response.append(part.text)
+    except Exception as e:
+        print(f"Error executing agent in command response: {e}")
+        
+    agent_reply = "".join(full_response).strip()
+    if not agent_reply:
+        agent_reply = "I have received your email command and executed the task successfully."
+        
+    # 5. Append the agent's reply to history
+    messages.append({
+        "role": "assistant",
+        "avatar": "👔",
+        "content": agent_reply,
+        "id": str(uuid.uuid4())[:8]
+    })
+    save_chat_history(session_id, messages)
+    
+    # 6. Send the reply back to the user via email as a thread reply
+    if user_email_msg_id:
+        try:
+            from workspace_tools import get_gmail_message_details, send_email
+            details = get_gmail_message_details(user_email_msg_id)
+            orig_subject = details.get("subject", "Agent Response")
+            reply_subject = orig_subject if orig_subject.lower().startswith("re:") else f"Re: {orig_subject}"
+            print(f"Sending email reply: '{reply_subject}'...")
+            send_email(to_email="me", subject=reply_subject, body=agent_reply)
+        except Exception as ex:
+            print(f"Failed to send email confirmation: {ex}")
 
 if __name__ == "__main__":
     print("Starting Autonomous Executive OS Scheduler...")
