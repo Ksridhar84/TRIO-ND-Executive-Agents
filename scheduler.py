@@ -8,7 +8,7 @@ from google.adk.runners import InMemoryRunner
 from google.genai import types
 from datetime import datetime
 from agents import chief_of_staff
-from workspace_tools import read_gmail_inbox, send_email
+from workspace_tools import read_gmail_inbox, send_email, search_gmail_messages
 from reminder_tools import get_db_connection, insert_pending_voice_alert
 
 load_dotenv()
@@ -231,7 +231,8 @@ def save_processed_commands(processed_ids):
 
 def job_check_user_commands():
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Checking inbox for direct user commands or replies...")
-    emails = read_gmail_inbox(max_results=5)
+    # Scan the latest 10 messages in the inbox (both read and unread) to prevent missing emails that were opened
+    emails = search_gmail_messages(query="label:INBOX", max_results=10)
     if not emails or "status" in emails[0] or "error" in emails[0]:
         print("No new emails or error fetching inbox.")
         return
@@ -248,11 +249,14 @@ def job_check_user_commands():
         sender = em.get("sender", "")
         snippet = em.get("snippet", "")
         
-        is_reply = subject.lower().startswith("re:") or subject.lower().startswith("fwd:")
-        is_agent_subject = any(kw in subject.lower() for kw in ["pattern analysis", "check-in", "briefing", "[test]"])
+        subject_lower = subject.lower().strip()
+        is_reply = subject_lower.startswith("re:") or subject_lower.startswith("fwd:")
+        is_agent_subject = any(kw in subject_lower for kw in ["pattern analysis", "check-in", "briefing", "[test]", "reminder"])
         is_direct_command = any(kw in snippet.lower() for kw in ["draft", "schedule", "remind"])
         
-        if is_reply and (is_agent_subject or is_direct_command):
+        is_new_command = subject_lower.startswith("cos:") or subject_lower.startswith("agent:") or subject_lower.startswith("coach:")
+        
+        if (is_reply and (is_agent_subject or is_direct_command)) or is_new_command:
             print(f"Found new user instruction/reply: '{subject}'. Waking up CoS...")
             
             # Retrieve full email body
