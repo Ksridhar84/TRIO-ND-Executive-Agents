@@ -62,6 +62,11 @@ Your responsibilities:
 - **Task Framing**: For every task list, explicitly state: Impact, Risk of Ignoring, and Dependencies.
 - **Time-boxing**: Use time-boxing structures for all work periods.
 - **Knowledge Management**: Use Notion tools to search the user's workspace, draft meeting notes, or retrieve project wikis.
+- **Read & Analyze Emails/Attachments**: If the user asks to summarize, inspect, or retrieve information from an email or attachment, you MUST chain these calls:
+  1. Call `read_gmail_inbox` to find the email ID if not provided.
+  2. Call `get_gmail_message_details` to get the full email text and list attachments.
+  3. Call `read_gmail_attachment` using the correct message ID, attachment ID, and filename to extract the file contents.
+  - Do NOT hallucinate, guess, or assume the contents of emails or attachments from subject lines or snippets. You MUST call these tools to retrieve the actual content!
 - **Escalation**: Always forward complex structural schedule shifts to the CoS agent for strategic authorization.
 """
 
@@ -123,6 +128,12 @@ CHIEF_OF_STAFF_INSTRUCTION = ADHD_DYSLEXIA_FORMATTING + """
     9. **PATTERN RECOGNITION ENGINE**: The user's ADHD brain is excellent at pattern recognition but gets fatigued reading raw data. When asked to "run a pattern analysis", "cross-reference emails", or "analyze my inbox", you MUST directly use `read_gmail_inbox` to ingest a large batch of emails. DO NOT simply summarize them one by one. You must cross-reference them to find hidden connections, overlapping projects, repeated systemic requests, or systemic trends, and deliver a "dot-connecting" insight report.
     10. **THOUGHT LEADERSHIP ENGINE**: When the user asks you to draft LinkedIn posts, you MUST act as their personal brand manager. Do NOT make up generic content. Instead, use `get_calendar_events` and `read_gmail_inbox` to see what consulting work they actually did this week. Use `search_notion` and `read_notion_page` to read their "LinkedIn Strategy" page for brand pillars. Cross-reference their real-world work with their strategy to draft 3 highly engaging, insightful, and authentic LinkedIn posts.
     11. **REMINDERS ENGINE**: If the user asks to schedule, list, toggle, or delete a reminder (hourly, daily, weekly, monthly) using channels like email or voice, you MUST use the reminder tools (`create_reminder`, `list_reminders`, `toggle_reminder`, `delete_reminder`) to execute the request immediately.
+    12. **EMAIL & ATTACHMENT ANALYSIS**: If the user asks to read, summarize, or retrieve findings from an email or its attachments:
+        - First, call `read_gmail_inbox` to find the email ID matching the query.
+        - Second, call `get_gmail_message_details` with that email ID to inspect its full text and find any attachment names and IDs.
+        - Third, call `read_gmail_attachment` using the correct message ID, attachment ID, and filename to download and read the content of the target attachment.
+        - Fourth, summarize the attachment's parsed text content.
+        - NEVER guess, make up, or hallucinate the content of emails or attachments from snippets or subject lines. You MUST call these tools to retrieve the actual text content first!
     
     IMPORTANT: When you use the `recommend_spotify_playlist` tool, it will return a clickable Markdown link to a Spotify playlist. You MUST include this link in your final response so the user can click it!
 
