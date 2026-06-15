@@ -353,6 +353,10 @@ with st.sidebar:
         st.success("✅ Audio recorded! Type a message below and hit Enter to send it.")
         
     st.markdown("---")
+    st.header("⚙️ Settings")
+    enable_voice = st.checkbox("Enable voice synthesis (can add 5-10s delay)", value=False, key="enable_voice_synthesis")
+    
+    st.markdown("---")
     st.header("🧘 Daily Coach Check-In")
     st.markdown("How are we feeling right now?")
     energy_level = st.slider("Energy Level", min_value=1, max_value=10, value=5)
@@ -698,7 +702,7 @@ if user_prompt:
 
         # 3. Stream the agent result back to your screen
         audio_bytes = None
-        if cos_response and "Error executing" not in cos_response:
+        if enable_voice and cos_response and "Error executing" not in cos_response:
             try:
                 audio_bytes = generate_agent_voice(cos_response)
             except Exception as e:
