@@ -51,7 +51,7 @@ if api_key:
 
 
 # Real Agent Backend Integration
-async def get_agent_response(prompt_text, session_id, file_bytes=None, mime_type=None):
+async def get_agent_response(prompt_text, session_id, file_bytes=None, mime_type=None, placeholder=None):
     from agents import ensure_gitlab_tools
     ensure_gitlab_tools()
     runner = InMemoryRunner(agent=chief_of_staff)
@@ -91,10 +91,41 @@ async def get_agent_response(prompt_text, session_id, file_bytes=None, mime_type
                     # Format sub-agents as blockquotes
                     if event.author != "ChiefOfStaff":
                         formatted_text = part.text.replace("\n", "\n> ")
-                        full_output.append(f"> **{event.author}**:\n> {formatted_text}")
+                        chunk = f"> **{event.author}**:\n> {formatted_text}"
                     else:
-                        full_output.append(part.text)
+                        chunk = part.text
+                    
+                    full_output.append(chunk)
+                    if placeholder:
+                        placeholder.markdown("\n\n".join(full_output) + " ▌")
+                        
+    if placeholder:
+        placeholder.markdown("\n\n".join(full_output))
+        
     return "\n\n".join(full_output)
+
+def run_agent_in_isolated_thread(prompt_text, session_id, file_bytes=None, mime_type=None, placeholder=None):
+    import threading
+    result = []
+    exc = []
+    
+    def target():
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            res = loop.run_until_complete(get_agent_response(prompt_text, session_id, file_bytes, mime_type, placeholder))
+            result.append(res)
+            loop.close()
+        except Exception as e:
+            exc.append(e)
+            
+    thread = threading.Thread(target=target)
+    thread.start()
+    thread.join()
+    
+    if exc:
+        raise exc[0]
+    return result[0]
 
 # --- Neurodivergent-Friendly Premium Config ---
 st.set_page_config(page_title="Chief of Staff HQ", layout="wide", initial_sidebar_state="expanded")
@@ -625,7 +656,16 @@ if user_prompt:
             
         with st.spinner("CoS is building team consensus..."):
             try:
-                cos_response = asyncio.run(get_agent_response(user_prompt, st.session_state.session_id, file_bytes, mime_type))
+                # Use isolated thread to run the agent and stream outputs dynamically
+                with st.chat_message("assistant", avatar="👔"):
+                    message_placeholder = st.empty()
+                    cos_response = run_agent_in_isolated_thread(
+                        user_prompt, 
+                        st.session_state.session_id, 
+                        file_bytes, 
+                        mime_type, 
+                        placeholder=message_placeholder
+                    )
                 if not cos_response.strip():
                     cos_response = "The team processed your request but returned no text output."
                     
