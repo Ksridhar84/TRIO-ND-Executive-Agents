@@ -462,126 +462,127 @@ for msg in st.session_state.messages:
 
 # --- Render the Persistent Chat History ---
 for msg in st.session_state.messages:
-            st.write(msg["content"])
-            
-            # Check for standard Spotify URLs
-            content = msg["content"]
-            spotify_pattern = r'(https://open\.spotify\.com/playlist/[a-zA-Z0-9]+)'
-            spotify_matches = [url.strip() for url in re.findall(spotify_pattern, content)]
-            
-            for url in spotify_matches:
-                embed_url = url.replace("/playlist/", "/embed/playlist/") + "?utm_source=generator"
-                st.components.v1.html(
-                    f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
-                    height=160
-                )
-            
-            if msg.get("has_file"):
-                st.caption("*(📎 Included an attachment)*")
-            if msg.get("audio_bytes"):
-                st.audio(msg["audio_bytes"], format="audio/mp3")
+    with st.chat_message(msg["role"], avatar=msg.get("avatar", "👤")):
+        st.write(msg["content"])
+        
+        # Check for standard Spotify URLs
+        content = msg["content"]
+        spotify_pattern = r'(https://open\.spotify\.com/playlist/[a-zA-Z0-9]+)'
+        spotify_matches = [url.strip() for url in re.findall(spotify_pattern, content)]
+        
+        for url in spotify_matches:
+            embed_url = url.replace("/playlist/", "/embed/playlist/") + "?utm_source=generator"
+            st.components.v1.html(
+                f'<iframe style="border-radius:12px" src="{embed_url}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
+                height=160
+            )
+        
+        if msg.get("has_file"):
+            st.caption("*(📎 Included an attachment)*")
+        if msg.get("audio_bytes"):
+            st.audio(msg["audio_bytes"], format="audio/mp3")
 
-            # Add Feedback & Copy UI for Assistant messages
-            if msg["role"] == "assistant":
-                col_spacer, col1, col2, col3 = st.columns([4, 1.5, 2.5, 1.5])
-                msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
-                
-                with col1:
-                    if msg.get("liked") or st.session_state.get(f"liked_{msg_id}"):
-                        st.button("💖 Saved!", key=f"up_{msg_id}_done", type="primary", disabled=True)
-                    else:
-                        if st.button("👍", key=f"up_{msg_id}"):
-                            msg["liked"] = True
-                            st.session_state[f"liked_{msg_id}"] = True
-                            save_chat_history(st.session_state.session_id, st.session_state.messages)
-                            store_memory("Agent Feedback", f"The user PREFERS this style of response: {content[:200]}...")
-                            st.rerun()
-                with col2:
-                    if msg.get("disliked") or st.session_state.get(f"disliked_{msg_id}"):
-                        st.button("😢 Feedback Saved", key=f"down_{msg_id}_done", type="primary", disabled=True)
-                    else:
-                        if st.button("👎", key=f"down_{msg_id}"):
-                            msg["disliked"] = True
-                            st.session_state[f"disliked_{msg_id}"] = True
-                            save_chat_history(st.session_state.session_id, st.session_state.messages)
-                            store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
-                            st.rerun()
-                with col3:
-                    import base64
-                    b64_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-                    copy_html = f"""
-                    <html style="margin:0; padding:0; overflow:hidden;">
-                    <head>
-                    <style>
-                    body {{
-                        margin: 0;
-                        padding: 0;
-                        background-color: transparent;
-                        overflow: hidden;
-                    }}
-                    button {{
-                        background-color: #1e1e1e;
-                        color: #e0e0e0;
-                        border: 1px solid #3a3a3a;
-                        padding: 4px 8px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        font-size: 13px;
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 4px;
-                        width: 100%;
-                        height: 30px;
-                        box-sizing: border-box;
-                        justify-content: center;
-                        transition: background-color 0.1s, border-color 0.1s;
-                    }}
-                    button:hover {{
-                        background-color: #2a2a2a;
-                        border-color: #5a5a5a;
-                    }}
-                    button:active {{
-                        background-color: #333333;
-                    }}
-                    </style>
-                    </head>
-                    <body>
-                    <button id="copy-btn" onclick="copy()">📋 Copy</button>
-                    <script>
-                    function copy() {{
-                        const text = atob("{b64_content}");
-                        navigator.clipboard.writeText(text).then(() => {{
+        # Add Feedback & Copy UI for Assistant messages
+        if msg["role"] == "assistant":
+            col_spacer, col1, col2, col3 = st.columns([4, 1.5, 2.5, 1.5])
+            msg_id = msg.get("id", str(uuid.uuid4())[:8]) # give it a pseudo id if none exists to prevent duplicate keys
+            
+            with col1:
+                if msg.get("liked") or st.session_state.get(f"liked_{msg_id}"):
+                    st.button("💖 Saved!", key=f"up_{msg_id}_done", type="primary", disabled=True)
+                else:
+                    if st.button("👍", key=f"up_{msg_id}"):
+                        msg["liked"] = True
+                        st.session_state[f"liked_{msg_id}"] = True
+                        save_chat_history(st.session_state.session_id, st.session_state.messages)
+                        store_memory("Agent Feedback", f"The user PREFERS this style of response: {content[:200]}...")
+                        st.rerun()
+            with col2:
+                if msg.get("disliked") or st.session_state.get(f"disliked_{msg_id}"):
+                    st.button("😢 Feedback Saved", key=f"down_{msg_id}_done", type="primary", disabled=True)
+                else:
+                    if st.button("👎", key=f"down_{msg_id}"):
+                        msg["disliked"] = True
+                        st.session_state[f"disliked_{msg_id}"] = True
+                        save_chat_history(st.session_state.session_id, st.session_state.messages)
+                        store_memory("Agent Feedback", f"The user DISLIKES this style of response. AVOID doing this: {content[:200]}...")
+                        st.rerun()
+            with col3:
+                import base64
+                b64_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+                copy_html = f"""
+                <html style="margin:0; padding:0; overflow:hidden;">
+                <head>
+                <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    background-color: transparent;
+                    overflow: hidden;
+                }}
+                button {{
+                    background-color: #1e1e1e;
+                    color: #e0e0e0;
+                    border: 1px solid #3a3a3a;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    width: 100%;
+                    height: 30px;
+                    box-sizing: border-box;
+                    justify-content: center;
+                    transition: background-color 0.1s, border-color 0.1s;
+                }}
+                button:hover {{
+                    background-color: #2a2a2a;
+                    border-color: #5a5a5a;
+                }}
+                button:active {{
+                    background-color: #333333;
+                }}
+                </style>
+                </head>
+                <body>
+                <button id="copy-btn" onclick="copy()">📋 Copy</button>
+                <script>
+                function copy() {{
+                    const text = atob("{b64_content}");
+                    navigator.clipboard.writeText(text).then(() => {{
+                        const btn = document.getElementById("copy-btn");
+                        btn.innerHTML = "✅ Copied!";
+                        setTimeout(() => {{
+                            btn.innerHTML = "📋 Copy";
+                        }}, 2000);
+                    }}).catch(err => {{
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        textArea.style.position = "fixed";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {{
+                            document.execCommand("copy");
                             const btn = document.getElementById("copy-btn");
                             btn.innerHTML = "✅ Copied!";
                             setTimeout(() => {{
                                 btn.innerHTML = "📋 Copy";
                             }}, 2000);
-                        }}).catch(err => {{
-                            const textArea = document.createElement("textarea");
-                            textArea.value = text;
-                            textArea.style.position = "fixed";
-                            document.body.appendChild(textArea);
-                            textArea.focus();
-                            textArea.select();
-                            try {{
-                                document.execCommand("copy");
-                                const btn = document.getElementById("copy-btn");
-                                btn.innerHTML = "✅ Copied!";
-                                setTimeout(() => {{
-                                    btn.innerHTML = "📋 Copy";
-                                }}, 2000);
-                            }} catch (e) {{
-                                console.error("Fallback copy failed", e);
-                            }}
-                            document.body.removeChild(textArea);
-                        }});
-                    }}
-                    </script>
-                    </body>
-                    </html>
-                    """
-                    st.components.v1.html(copy_html, height=35)
+                        }} catch (e) {{
+                            console.error("Fallback copy failed", e);
+                        }}
+                        document.body.removeChild(textArea);
+                    }});
+                }}
+                </script>
+                </body>
+                </html>
+                """
+                st.components.v1.html(copy_html, height=35)
 
 # --- Get Input from either Chat or Sidebar Check-In ---
 user_prompt = st.chat_input("Type your messy thought, or press Enter to just send your uploaded file/audio...")
