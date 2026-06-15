@@ -51,18 +51,31 @@ if api_key:
 
 
 # Real Agent Backend Integration
-async def get_agent_response(prompt_text, file_bytes=None, mime_type=None):
+async def get_agent_response(prompt_text, session_id, file_bytes=None, mime_type=None):
     from agents import ensure_gitlab_tools
     ensure_gitlab_tools()
     runner = InMemoryRunner(agent=chief_of_staff)
     runner.auto_create_session = True
-    session_id = f"streamlit_session_{int(time.time())}"
     
+    # Load chat history from disk to maintain continuity
+    from chat_tools import load_chat_history
+    history = load_chat_history(session_id) or []
+    
+    context_prompt = "Below is the history of the conversation so far for your reference:\n"
+    for msg in history:
+        # Exclude the user's current message which will be appended as new_message
+        role = msg.get("role", "unknown")
+        content = msg.get("content", "")
+        # Strip out any voice alert indicators to keep clean text
+        if content.startswith("📢 **Voice Alert**:") or content.startswith("📢 **Test Voice Alert**:"):
+            continue
+        context_prompt += f"- {role}: {content}\n"
+        
     parts = []
     if prompt_text:
-        # Inject current time as hidden context so the agent never hallucinates the date
+        # Inject current time and conversation history as hidden context so the agent has memory and date info
         current_time_str = get_localized_now().strftime("%A, %B %d, %Y at %I:%M %p")
-        hidden_context = f"[System Info: The current date and time is {current_time_str}]\n\n{prompt_text}"
+        hidden_context = f"{context_prompt}\n\n[System Info: The current date and time is {current_time_str}]\n\n[New Message]: {prompt_text}"
         parts.append(types.Part.from_text(text=hidden_context))
     if file_bytes and mime_type:
         parts.append(types.Part.from_bytes(data=file_bytes, mime_type=mime_type))
@@ -70,6 +83,7 @@ async def get_agent_response(prompt_text, file_bytes=None, mime_type=None):
     message = types.Content(role="user", parts=parts)
     
     full_output = []
+    # Use the actual session_id to maintain consistency
     async for event in runner.run_async(user_id="streamlit_user", session_id=session_id, new_message=message):
         if event.author and event.content and event.content.parts:
             for part in event.content.parts:
@@ -610,7 +624,7 @@ if user_prompt:
             
         with st.spinner("CoS is building team consensus..."):
             try:
-                cos_response = asyncio.run(get_agent_response(user_prompt, file_bytes, mime_type))
+                cos_response = asyncio.run(get_agent_response(user_prompt, st.session_state.session_id, file_bytes, mime_type))
                 if not cos_response.strip():
                     cos_response = "The team processed your request but returned no text output."
                     
