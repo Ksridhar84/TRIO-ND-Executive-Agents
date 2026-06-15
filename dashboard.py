@@ -106,6 +106,7 @@ async def get_agent_response(prompt_text, session_id, file_bytes=None, mime_type
 
 def run_agent_in_isolated_thread(prompt_text, session_id, file_bytes=None, mime_type=None, placeholder=None):
     import threading
+    from streamlit.runtime.scriptrunner import add_script_run_ctx
     result = []
     exc = []
     
@@ -120,6 +121,7 @@ def run_agent_in_isolated_thread(prompt_text, session_id, file_bytes=None, mime_
             exc.append(e)
             
     thread = threading.Thread(target=target)
+    add_script_run_ctx(thread)
     thread.start()
     thread.join()
     
