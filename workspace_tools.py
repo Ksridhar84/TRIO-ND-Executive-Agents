@@ -180,22 +180,31 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
     """Send an email from the user's Gmail account.
     
     Args:
-        to_email (str): The email address of the recipient. If sending to yourself, use 'me'.
+        to_email (str): The email address of the recipient. MUST be 'me'. Sending to external addresses is blocked for security.
         subject (str): The subject line of the email.
         body (str): The main body text of the email.
         
     Returns:
         dict: Status message indicating success or failure.
     """
+    to_email_clean = to_email.lower().strip()
     if os.environ.get("DEMO_MODE", "").lower() == "true":
+        if to_email_clean != "me":
+            return {"error": "Security Restriction: The agent is only permitted to send emails to the owner of this account ('me'). Outbound emails to external addresses are blocked."}
         return {"status": "success", "message_id": "mock_email_send_id_12345"}
     try:
         creds = authenticate_google_workspace()
         service = build('gmail', 'v1', credentials=creds)
 
-        if to_email.lower() == 'me':
-            profile = service.users().getProfile(userId='me').execute()
-            to_email = profile.get('emailAddress')
+        # Retrieve user's own email to enforce self-only restriction
+        profile = service.users().getProfile(userId='me').execute()
+        user_email = profile.get('emailAddress', '').lower().strip()
+
+        if to_email_clean != 'me' and to_email_clean != user_email:
+            return {"error": f"Security Restriction: The agent is only permitted to send emails to the owner of this account ('me' or '{user_email}'). Outbound emails to external addresses (like '{to_email}') are blocked."}
+
+        if to_email_clean == 'me':
+            to_email = user_email
 
         message = EmailMessage()
         message.set_content(body)
