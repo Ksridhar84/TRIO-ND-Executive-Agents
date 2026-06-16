@@ -358,6 +358,52 @@ with st.sidebar:
     enable_refresh = st.checkbox("Auto-refresh alerts (every 2 min)", value=True, key="enable_autorefresh")
     
     st.markdown("---")
+    
+    # --- Pending Outbound Drafts ---
+    import json
+    drafts_file = "pending_drafts.json"
+    if os.path.exists(drafts_file):
+        try:
+            with open(drafts_file, "r", encoding="utf-8") as f:
+                drafts = json.load(f)
+        except Exception:
+            drafts = []
+            
+        if drafts:
+            st.header("✉️ Pending Outbound Drafts")
+            st.caption("Outbound emails to external addresses require your approval before sending.")
+            
+            for draft in drafts:
+                with st.expander(f"📩 Draft to: {draft['to']}", expanded=True):
+                    st.write(f"**Subject:** {draft['subject']}")
+                    st.text_area("Body", value=draft['body'], height=120, disabled=True, key=f"preview_{draft['id']}")
+                    
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button("👍 Send", key=f"send_draft_{draft['id']}", use_container_width=True):
+                            from workspace_tools import send_email_actual
+                            res = send_email_actual(draft['to'], draft['subject'], draft['body'])
+                            if "error" in res:
+                                st.error(f"Error: {res['error']}")
+                            else:
+                                st.success("Sent successfully!")
+                                # Remove from drafts list
+                                drafts = [d for d in drafts if d['id'] != draft['id']]
+                                with open(drafts_file, "w", encoding="utf-8") as f:
+                                    json.dump(drafts, f, indent=4)
+                                import time
+                                time.sleep(1)
+                                st.rerun()
+                    with c2:
+                        if st.button("🗑️ Discard", key=f"discard_draft_{draft['id']}", use_container_width=True):
+                            drafts = [d for d in drafts if d['id'] != draft['id']]
+                            with open(drafts_file, "w", encoding="utf-8") as f:
+                                json.dump(drafts, f, indent=4)
+                            st.success("Discarded!")
+                            import time
+                            time.sleep(1)
+                            st.rerun()
+            st.markdown("---")
     st.header("🧘 Daily Coach Check-In")
     st.markdown("How are we feeling right now?")
     energy_level = st.slider("Energy Level", min_value=1, max_value=10, value=5)

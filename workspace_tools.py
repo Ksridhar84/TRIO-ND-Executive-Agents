@@ -176,35 +176,42 @@ def search_gmail_messages(query: str = '', max_results: int = 20) -> list[dict]:
     except Exception as e:
         return [{"error": f"Failed to search emails: {str(e)}"}]
 
-def send_email(to_email: str, subject: str, body: str) -> dict:
-    """Send an email from the user's Gmail account.
+def save_pending_draft(to_email: str, subject: str, body: str) -> str:
+    """Save an outbound email to external address as a pending draft for user approval."""
+    import uuid
+    import json
+    drafts_file = "pending_drafts.json"
+    drafts = []
+    if os.path.exists(drafts_file):
+        try:
+            with open(drafts_file, "r", encoding="utf-8") as f:
+                drafts = json.load(f)
+        except Exception:
+            drafts = []
+            
+    draft_id = str(uuid.uuid4())[:8]
+    drafts.append({
+        "id": draft_id,
+        "to": to_email,
+        "subject": subject,
+        "body": body,
+        "created_at": datetime.datetime.now().isoformat()
+    })
     
-    Args:
-        to_email (str): The email address of the recipient. MUST be 'me'. Sending to external addresses is blocked for security.
-        subject (str): The subject line of the email.
-        body (str): The main body text of the email.
+    with open(drafts_file, "w", encoding="utf-8") as f:
+        json.dump(drafts, f, indent=4)
         
-    Returns:
-        dict: Status message indicating success or failure.
-    """
-    to_email_clean = to_email.lower().strip()
-    if os.environ.get("DEMO_MODE", "").lower() == "true":
-        if to_email_clean != "me":
-            return {"error": "Security Restriction: The agent is only permitted to send emails to the owner of this account ('me'). Outbound emails to external addresses are blocked."}
-        return {"status": "success", "message_id": "mock_email_send_id_12345"}
+    return draft_id
+
+def send_email_actual(to_email: str, subject: str, body: str) -> dict:
+    """Internal helper that actually sends the email via Gmail API without safety checks."""
     try:
         creds = authenticate_google_workspace()
         service = build('gmail', 'v1', credentials=creds)
 
-        # Retrieve user's own email to enforce self-only restriction
-        profile = service.users().getProfile(userId='me').execute()
-        user_email = profile.get('emailAddress', '').lower().strip()
-
-        if to_email_clean != 'me' and to_email_clean != user_email:
-            return {"error": f"Security Restriction: The agent is only permitted to send emails to the owner of this account ('me' or '{user_email}'). Outbound emails to external addresses (like '{to_email}') are blocked."}
-
-        if to_email_clean == 'me':
-            to_email = user_email
+        if to_email.lower() == 'me':
+            profile = service.users().getProfile(userId='me').execute()
+            to_email = profile.get('emailAddress')
 
         message = EmailMessage()
         message.set_content(body)
@@ -234,6 +241,47 @@ def send_email(to_email: str, subject: str, body: str) -> dict:
             print(f"Warning: Failed to save sent message ID to processed_commands.json: {e}")
 
         return {"status": "success", "message_id": msg_id}
+    except Exception as e:
+        return {"error": f"Failed to send email: {str(e)}"}
+
+def send_email(to_email: str, subject: str, body: str) -> dict:
+    """Send an email from the user's Gmail account.
+    
+    Args:
+        to_email (str): The email address of the recipient. If sending to yourself, use 'me'. Outbound emails to external addresses will be saved as drafts for user approval.
+        subject (str): The subject line of the email.
+        body (str): The main body text of the email.
+        
+    Returns:
+        dict: Status message indicating success or draft saving.
+    """
+    to_email_clean = to_email.lower().strip()
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
+        if to_email_clean != "me":
+            draft_id = save_pending_draft(to_email, subject, body)
+            return {
+                "status": "pending_approval", 
+                "draft_id": draft_id,
+                "message": f"This email is to an external address ('{to_email}') and has been saved as a pending draft (ID: {draft_id}). It will NOT be sent until the user approves it. Please show the draft details (To, Subject, Body) to the user in your response so they can approve it."
+            }
+        return {"status": "success", "message_id": "mock_email_send_id_12345"}
+    try:
+        creds = authenticate_google_workspace()
+        service = build('gmail', 'v1', credentials=creds)
+
+        # Retrieve user's own email to check self-only restriction
+        profile = service.users().getProfile(userId='me').execute()
+        user_email = profile.get('emailAddress', '').lower().strip()
+
+        if to_email_clean != 'me' and to_email_clean != user_email:
+            draft_id = save_pending_draft(to_email, subject, body)
+            return {
+                "status": "pending_approval",
+                "draft_id": draft_id,
+                "message": f"This email is to an external address ('{to_email}') and has been intercepted and saved as a pending draft (ID: {draft_id}). It will NOT be sent until the user approves it. Please present the draft (To, Subject, and Body) in your response so the user can review and approve it."
+            }
+
+        return send_email_actual(to_email, subject, body)
     except Exception as e:
         return {"error": f"Failed to send email: {str(e)}"}
 
