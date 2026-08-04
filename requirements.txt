@@ -1,6 +1,6 @@
 google-adk>=2.2.0
 python-dotenv
-mcp
+mcp<2.0.0
 streamlit
 google-genai
 google-auth-oauthlib
